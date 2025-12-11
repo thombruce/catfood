@@ -1,4 +1,8 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use chrono::Local;
+use crossterm::{
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
+    terminal::enable_raw_mode,
+};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Direction, Layout},
@@ -7,6 +11,7 @@ use ratatui::{
     text::Line,
     widgets::{Block, Paragraph},
 };
+use std::time::Duration;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -17,10 +22,11 @@ fn main() -> color_eyre::Result<()> {
 }
 
 /// The main application which holds the state and logic of the application.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct App {
     /// Is the application running?
     running: bool,
+    time: String,
 }
 
 impl App {
@@ -33,6 +39,7 @@ impl App {
     pub fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         self.running = true;
         while self.running {
+            self.time = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
             terminal.draw(|frame| self.render(frame))?;
             self.handle_crossterm_events()?;
         }
@@ -55,40 +62,14 @@ impl App {
             ])
             .split(frame.area());
 
-        let title = Line::from("Ratatui Simple Template")
-            .bold()
-            .blue()
-            .centered();
+        let text = "Hello, Ratatui!";
 
-        let text = "Hello, Ratatui!\n\n\
-            Created using https://github.com/ratatui/templates\n\
-            Press `Esc`, `Ctrl-C` or `q` to stop running.";
+        frame.render_widget(Paragraph::new(text).left_aligned().cyan(), layout[0]);
+
+        frame.render_widget(Paragraph::new(text).centered().red(), layout[1]);
 
         frame.render_widget(
-            Paragraph::new(text)
-                .block(Block::bordered().border_type(ratatui::widgets::BorderType::Rounded))
-                .left_aligned()
-                .cyan(),
-            layout[0],
-        );
-
-        frame.render_widget(
-            Paragraph::new(text)
-                .block(
-                    Block::bordered()
-                        .border_type(ratatui::widgets::BorderType::Rounded)
-                        .title(title),
-                )
-                .centered()
-                .red(),
-            layout[1],
-        );
-
-        frame.render_widget(
-            Paragraph::new(text)
-                .block(Block::bordered().border_type(ratatui::widgets::BorderType::Rounded))
-                .right_aligned()
-                .green(),
+            Paragraph::new(self.time.clone()).right_aligned().green(),
             layout[2],
         );
     }
@@ -98,12 +79,14 @@ impl App {
     /// If your application needs to perform work in between handling events, you can use the
     /// [`event::poll`] function to check if there are any events available with a timeout.
     fn handle_crossterm_events(&mut self) -> color_eyre::Result<()> {
-        match event::read()? {
-            // it's important to check KeyEventKind::Press to avoid handling key release events
-            Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
-            Event::Mouse(_) => {}
-            Event::Resize(_, _) => {}
-            _ => {}
+        if event::poll(Duration::from_millis(500))? {
+            match event::read()? {
+                // it's important to check KeyEventKind::Press to avoid handling key release events
+                Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
+                Event::Mouse(_) => {}
+                Event::Resize(_, _) => {}
+                _ => {}
+            }
         }
         Ok(())
     }
