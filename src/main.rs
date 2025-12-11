@@ -4,7 +4,7 @@ use ratatui::{
     DefaultTerminal, Frame,
     layout::{Direction, Layout},
     prelude::Constraint,
-    style::Stylize,
+    style::{Color, Stylize},
     widgets::Paragraph,
 };
 use std::time::Duration;
@@ -60,12 +60,17 @@ impl App {
 
         let text = "=^,^=";
 
-        frame.render_widget(Paragraph::new(text).left_aligned().cyan(), layout[0]);
+        frame.render_widget(
+            Paragraph::new(text).left_aligned().fg(Color::White),
+            layout[0],
+        );
 
-        frame.render_widget(Paragraph::new(text).centered().red(), layout[1]);
+        frame.render_widget(Paragraph::new(text).centered().fg(Color::White), layout[1]);
 
         frame.render_widget(
-            Paragraph::new(self.time.clone()).right_aligned().green(),
+            Paragraph::new(self.time.clone())
+                .right_aligned()
+                .fg(Color::White),
             layout[2],
         );
     }
