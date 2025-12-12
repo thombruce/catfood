@@ -17,7 +17,7 @@ use ratatui::{
     prelude::Constraint,
     style::{Color, Stylize},
     text::{Line, Span, Text},
-    widgets::Paragraph,
+    widgets::{Borders, Paragraph},
 };
 use std::{io, process::Command, time::Duration};
 
@@ -107,6 +107,9 @@ impl App {
 
         let text = "=^,^=";
 
+        // TODO: Workspaces (NOTE: Focused state is obtained from `hyprctl activeworkspace`, which
+        // we should be able to match to one of the listed `hyprctl workspaces` displayed)
+
         frame.render_widget(
             Paragraph::new(text).left_aligned().fg(Color::White),
             layout[0],
@@ -115,16 +118,41 @@ impl App {
         frame.render_widget(Paragraph::new(text).centered().fg(Color::White), layout[1]);
 
         let sep_span = Span::raw(" | ");
+        let space_span = Span::raw(" ");
+        // TODO: Consider actual usefulness of space_span. We can just write space after icons
+        // below. Perhaps it is useful though as a separator for dividing components from one
+        // another.
 
-        let vol_span = Span::raw("󰕾 ".to_owned() + &self.volume + "%");
+        // TODO: CPU
+        // TODO: RAM
+        // TODO: Temp
+        // TODO: WiFi
+        // TODO: VPN
+        // TODO: Brightness (see below)
 
-        let bat_span = Span::raw("󰁹 ".to_owned() + &self.bat_percent);
+        // TODO: Actually read brightness from system!
+        let brightness_span = Span::raw("󰃠 100%");
+
+        // TODO: As below, we can conditionally modify icon and color
+        let vol_icon = Span::raw("󰕾 ".to_owned()); // .green();
+        let vol_span = Span::raw(self.volume.clone() + "%"); // .green();
+
+        // TODO: bat_icon being separate means we should be able to use the bat_percent value to
+        // conditionally set half-full and close-to-empty icons, and also conditionally apply
+        // different colors (though color-mode should be configurable either via config file or
+        // command line argument)
+        let bat_icon = Span::raw("󰁹 ".to_owned()); // .green();
+        let bat_span = Span::raw(self.bat_percent.clone() + "%"); // .green();
 
         let time_span = Span::raw(&self.time);
 
         let widget_line = Line::from(vec![
+            brightness_span,
+            space_span.clone(),
+            vol_icon,
             vol_span,
             sep_span.clone(),
+            bat_icon,
             bat_span,
             sep_span.clone(),
             time_span,
