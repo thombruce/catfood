@@ -16,6 +16,7 @@ use ratatui::{
     layout::{Direction, Layout},
     prelude::Constraint,
     style::{Color, Stylize},
+    text::{Line, Span, Text},
     widgets::Paragraph,
 };
 use std::{io, process::Command, time::Duration};
@@ -113,20 +114,27 @@ impl App {
 
         frame.render_widget(Paragraph::new(text).centered().fg(Color::White), layout[1]);
 
+        let sep_span = Span::raw(" | ");
+
+        let vol_span = Span::raw("󰕾 ".to_owned() + &self.volume + "%");
+
+        let bat_span = Span::raw("󰁹 ".to_owned() + &self.bat_percent);
+
+        let time_span = Span::raw(&self.time);
+
+        let widget_line = Line::from(vec![
+            vol_span,
+            sep_span.clone(),
+            bat_span,
+            sep_span.clone(),
+            time_span,
+        ]);
+
         frame.render_widget(
-            Paragraph::new(
-                "󰕾 ".to_owned()
-                    + &self.volume
-                    + "% | "
-                    + "󰁹 "
-                    + &self.bat_percent
-                    + "%"
-                    + " | "
-                    + &self.time,
-            )
-            .right_aligned()
-            // .fg(Color::Rgb(189, 43, 174)),
-            .fg(Color::White),
+            Paragraph::new(widget_line)
+                .right_aligned()
+                // .fg(Color::Rgb(189, 43, 174)),
+                .fg(Color::White),
             layout[2],
         );
     }
