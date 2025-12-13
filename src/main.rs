@@ -16,10 +16,11 @@ use ratatui::{
     layout::{Direction, Layout},
     prelude::Constraint,
     style::{Color, Stylize},
-    text::{Line, Span, Text},
-    widgets::{Borders, Paragraph},
+    text::{Line, Span},
+    widgets::Paragraph,
 };
 use std::{io, process::Command, time::Duration};
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -37,6 +38,8 @@ pub struct App {
     time: String,
     volume: String,
     bat_percent: String,
+    cpu: String,
+    ram: String,
 }
 
 impl App {
@@ -48,6 +51,17 @@ impl App {
     /// Run the application's main loop.
     pub fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         self.running = true;
+
+        // CPU setup
+        let mut s = System::new_with_specifics(
+            RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
+        );
+        // Wait a bit because CPU usage is based on diff.
+        // TODO: Sleep affects startup? It's also only needed for the CPU widget, right?
+        // This should be isolated somehow. Should it also be waited on before each CPU update?
+        // It also isn't strictly necessary, since we're refreshing the info every draw anyway;
+        // I've commented this out for now.
+        // std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
 
         // TODO: Move me! Ideally each widget should be moved into its own file and assembled here.
         // TODO: Document me! We need better comments to describe what's going on. This doesn't get
@@ -85,6 +99,28 @@ impl App {
             terminal.draw(|frame| self.render(frame))?;
             self.handle_crossterm_events()?;
             manager.refresh(&mut battery)?;
+
+            // TODO: On the other hand, these are refreshed too quickly. We need to handle the
+            // refresh rate of CPU and RAM separately from time and volume.
+            s.refresh_cpu_all();
+            s.refresh_memory();
+
+            // TODO: We don't necessarily need to reobtain total_memory. We can store this value
+            // permantely somewhere.
+            let mem_percent: u32 =
+                (s.used_memory() as f64 / s.total_memory() as f64 * 100.0) as u32;
+            // TODO: Consider storing numeric values as their numeric types. String conversion
+            // should be handled within the renderer scope.
+            self.ram = mem_percent.to_string();
+
+            // TODO: iter can be created once. Move this out of loop.
+            let iter = s.cpus().iter();
+            // TODO: count can be counted once. Move out of loop.
+            let count = iter.len() as f32;
+            // sum and avg must be recalculated following CPU refresh.
+            let sum = iter.fold(0.0, |acc, x| acc + x.cpu_usage());
+            let avg: u32 = (sum / count) as u32;
+            self.cpu = avg.to_string();
         }
         Ok(())
     }
@@ -123,12 +159,15 @@ impl App {
         // below. Perhaps it is useful though as a separator for dividing components from one
         // another.
 
-        // TODO: CPU
-        // TODO: RAM
         // TODO: Temp
         // TODO: WiFi
         // TODO: VPN
         // TODO: Brightness (see below)
+
+        let cpu_icon = Span::raw("󰻠 ".to_owned());
+        let cpu_span = Span::raw(self.cpu.clone() + "%");
+        let ram_icon = Span::raw("󰍛 ".to_owned());
+        let ram_span = Span::raw(self.ram.clone() + "%");
 
         // TODO: Actually read brightness from system!
         let brightness_span = Span::raw("󰃠 100%");
@@ -147,6 +186,12 @@ impl App {
         let time_span = Span::raw(&self.time);
 
         let widget_line = Line::from(vec![
+            cpu_icon,
+            cpu_span,
+            space_span.clone(),
+            ram_icon,
+            ram_span,
+            sep_span.clone(),
             brightness_span,
             space_span.clone(),
             vol_icon,

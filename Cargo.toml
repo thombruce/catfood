@@ -12,6 +12,11 @@ ratatui = "0.29.0"
 color-eyre = "0.6.3"
 chrono = "0.4.42"
 battery = "0.7.8"
+# TODO: sysinfo is quite a large dependency, providing info for MacOS and Windows as well as Linux, right?
+# Consider requiring only what is explicitly needed... which, given that meow will right now only work on
+# Linux, means Linux-specific features. Alternatively... keep it and consider generalising Linux-specific
+# code to work on other operating systems.
+sysinfo = "0.37.2"
 
 # Read the optimization guideline for more details: https://ratatui.rs/recipes/apps/release-your-app/#optimizations
 [profile.release]
