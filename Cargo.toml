@@ -17,6 +17,7 @@ battery = "0.7.8"
 # Linux, means Linux-specific features. Alternatively... keep it and consider generalising Linux-specific
 # code to work on other operating systems.
 sysinfo = "0.37.2"
+regex = "1.12.2"
 
 # Read the optimization guideline for more details: https://ratatui.rs/recipes/apps/release-your-app/#optimizations
 [profile.release]

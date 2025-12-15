@@ -19,6 +19,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::Paragraph,
 };
+use regex::Regex;
 use std::{io, process::Command, time::Duration};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
@@ -37,6 +38,7 @@ pub struct App {
     running: bool,
     time: String,
     volume: String,
+    brightness: String,
     bat_percent: String,
     cpu: String,
     ram: String,
@@ -94,6 +96,8 @@ impl App {
             // does not appear to have this capability..? Presumably the sound control systems we
             // have installed do output some kind of information we could listen to somewhere?
             self.volume = get_system_volume().unwrap().to_string();
+
+            self.brightness = get_system_brightness().unwrap().to_string();
 
             self.bat_percent = ((battery.state_of_charge().value * 100.0) as i32).to_string();
             terminal.draw(|frame| self.render(frame))?;
@@ -162,15 +166,14 @@ impl App {
         // TODO: Temp
         // TODO: WiFi
         // TODO: VPN
-        // TODO: Brightness (see below)
 
         let cpu_icon = Span::raw("󰻠 ".to_owned());
         let cpu_span = Span::raw(self.cpu.clone() + "%");
         let ram_icon = Span::raw("󰍛 ".to_owned());
         let ram_span = Span::raw(self.ram.clone() + "%");
 
-        // TODO: Actually read brightness from system!
-        let brightness_span = Span::raw("󰃠 100%");
+        let brightness_icon = Span::raw("󰃠 ".to_owned()); // .green();
+        let brightness_span = Span::raw(self.brightness.clone());
 
         // TODO: As below, we can conditionally modify icon and color
         let vol_icon = Span::raw("󰕾 ".to_owned()); // .green();
@@ -192,6 +195,7 @@ impl App {
             ram_icon,
             ram_span,
             sep_span.clone(),
+            brightness_icon,
             brightness_span,
             space_span.clone(),
             vol_icon,
@@ -267,6 +271,33 @@ fn get_system_volume() -> Option<i32> {
         }
 
         eprintln!("Failed to parse volume from output: {}", stdout);
+    } else {
+        eprintln!(
+            "Error: {}",
+            str::from_utf8(&output.stderr).unwrap_or("unknown error")
+        );
+    }
+
+    None
+}
+
+fn get_system_brightness() -> Option<String> {
+    let output = Command::new("brightnessctl")
+        .output()
+        .expect("failed to get brightness");
+
+    if output.status.success() {
+        let brightness_str = str::from_utf8(&output.stdout).unwrap();
+
+        // TODO: This should be a constant rather than recreated here on
+        // every loop.
+        let re = Regex::new(r"\d+%").unwrap();
+
+        if let Some(brightness) = re.find(brightness_str).map(|m| m.as_str()) {
+            return Some(brightness.to_string()); // as percentage
+        }
+
+        eprintln!("Failed to parse volume from output: {}", brightness_str);
     } else {
         eprintln!(
             "Error: {}",
