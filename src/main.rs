@@ -20,7 +20,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 use regex::Regex;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::{io, process::Command, time::Duration};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
@@ -156,8 +156,6 @@ impl App {
         // TODO: Consider actual usefulness of space_span. We can just write space after icons
         // below. Perhaps it is useful though as a separator for dividing components from one
         // another.
-
-        let text_span = Span::raw("=^,^=");
 
         let workspaces = self
             .workspaces
