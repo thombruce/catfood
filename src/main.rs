@@ -20,6 +20,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::{io, process::Command, time::Duration};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
@@ -42,6 +43,8 @@ pub struct App {
     bat_percent: String,
     cpu: String,
     ram: String,
+    workspaces: Vec<String>,
+    active_workspace: String,
 }
 
 impl App {
@@ -125,6 +128,9 @@ impl App {
             let sum = iter.fold(0.0, |acc, x| acc + x.cpu_usage());
             let avg: u32 = (sum / count) as u32;
             self.cpu = avg.to_string();
+
+            self.workspaces = get_workspaces().expect("workspaces not found");
+            self.active_workspace = get_active_workspace().expect("active workspace not found");
         }
         Ok(())
     }
@@ -153,15 +159,21 @@ impl App {
 
         let text_span = Span::raw("=^,^=");
 
-        // TODO: Workspaces (NOTE: Focused state is obtained from `hyprctl activeworkspace`, which
-        // we should be able to match to one of the listed `hyprctl workspaces` displayed)
+        let workspaces = self
+            .workspaces
+            .iter()
+            .map(|w| {
+                if w == &self.active_workspace {
+                    Span::raw(format!(" {} ", w))
+                        .bg(Color::White)
+                        .fg(Color::Black)
+                } else {
+                    Span::raw(format!(" {} ", w))
+                }
+            })
+            .collect::<Vec<Span>>();
 
-        frame.render_widget(
-            Line::from(vec![space_span.clone(), text_span])
-                .left_aligned()
-                .fg(Color::White),
-            layout[0],
-        );
+        frame.render_widget(Line::from(workspaces).left_aligned(), layout[0]);
 
         let time_span = Span::raw(&self.time);
 
@@ -256,6 +268,55 @@ impl App {
     fn quit(&mut self) {
         self.running = false;
     }
+}
+
+#[derive(Deserialize, Debug)]
+struct Workspace {
+    id: i32,
+}
+
+fn get_workspaces() -> Option<Vec<String>> {
+    let output = Command::new("hyprctl")
+        .args(["workspaces", "-j"]) // -j outputs in json, which ought to be easier to work with
+        .output()
+        .expect("failed to get workspaces");
+
+    if output.status.success() {
+        let stdout = str::from_utf8(&output.stdout).unwrap();
+        let json: Vec<Workspace> =
+            serde_json::from_str(stdout).expect("failed to parse workspaces");
+
+        return Some(json.iter().map(|j| j.id.clone().to_string()).collect());
+    } else {
+        eprintln!(
+            "Error: {}",
+            str::from_utf8(&output.stderr).unwrap_or("unknown error")
+        );
+    }
+
+    None
+}
+
+fn get_active_workspace() -> Option<String> {
+    let output = Command::new("hyprctl")
+        .args(["activeworkspace", "-j"])
+        .output()
+        .expect("failed to get active workspace");
+
+    if output.status.success() {
+        let stdout = str::from_utf8(&output.stdout).unwrap();
+        let json: Workspace =
+            serde_json::from_str(stdout).expect("failed to parse active workspace");
+
+        return Some(json.id.clone().to_string());
+    } else {
+        eprintln!(
+            "Error: {}",
+            str::from_utf8(&output.stderr).unwrap_or("unknown error")
+        );
+    }
+
+    None
 }
 
 fn get_system_volume() -> Option<i32> {
