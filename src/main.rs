@@ -5,16 +5,23 @@ use ratatui::{
     prelude::Constraint,
 };
 use std::time::Duration;
+use tokio::runtime::Runtime;
 
 mod components;
 use components::{MiddleBar, SystemBar, Workspaces};
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
-    let terminal = ratatui::init();
-    let result = App::new()?.run(terminal);
-    ratatui::restore();
-    result
+
+    // Initialize Tokio runtime
+    let rt = Runtime::new()?;
+
+    rt.block_on(async {
+        let terminal = ratatui::init();
+        let result = App::new()?.run_async(terminal).await;
+        ratatui::restore();
+        result
+    })
 }
 
 /// The main application which holds the state and logic of the application.
@@ -39,7 +46,7 @@ impl App {
     }
 
     /// Run the application's main loop.
-    pub fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
+    pub async fn run_async(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
             self.update_components();
             terminal.draw(|frame| self.render(frame))?;

@@ -1,12 +1,19 @@
 use serde::Deserialize;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Default, Clone)]
-pub struct Weather {
+pub struct WeatherData {
     pub temperature: String,
     pub condition: String,
     pub icon: String,
-    last_update: u64,
+}
+
+#[derive(Debug)]
+pub struct Weather {
+    data: Arc<Mutex<WeatherData>>,
+    last_update: Arc<Mutex<u64>>,
+    _update_handle: tokio::task::JoinHandle<()>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,40 +34,99 @@ struct WeatherCondition {
 
 impl Weather {
     pub fn new() -> Self {
-        Self {
+        let data = Arc::new(Mutex::new(WeatherData {
             temperature: "--".to_string(),
             condition: "Unknown".to_string(),
             icon: "󰖐".to_string(),
-            last_update: 0,
+        }));
+        let last_update = Arc::new(Mutex::new(0u64));
+
+        let data_clone = data.clone();
+        let last_update_clone = last_update.clone();
+
+        // Spawn background task for weather updates
+        let update_handle = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(600)); // 10 minutes
+
+            loop {
+                interval.tick().await;
+
+                if let Ok(weather_data) = Self::fetch_weather_async().await {
+                    let now = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+
+                    if let Ok(mut data_guard) = data_clone.lock() {
+                        data_guard.temperature = format!("{:.0}", weather_data.main.temp);
+                        data_guard.condition = weather_data.weather[0].main.clone();
+                        data_guard.icon = Self::get_weather_icon(&data_guard.condition);
+                    }
+
+                    if let Ok(mut last_update_guard) = last_update_clone.lock() {
+                        *last_update_guard = now;
+                    }
+                }
+            }
+        });
+
+        Self {
+            data,
+            last_update,
+            _update_handle: update_handle,
         }
     }
 
     pub fn update(&mut self) {
-        let now = SystemTime::now()
+        // This is now non-blocking - data is updated in background
+        // Just check if we need to trigger initial update
+        let _now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
 
-        // Update every 10 minutes to avoid API rate limits
-        if now - self.last_update < 600 {
-            return;
-        }
+        if let Ok(last_update_guard) = self.last_update.lock()
+            && *last_update_guard == 0
+        {
+            // First run, spawn immediate fetch
+            let data_clone = self.data.clone();
+            let last_update_clone = self.last_update.clone();
 
-        if let Ok(weather_data) = self.fetch_weather() {
-            self.temperature = format!("{:.0}", weather_data.main.temp);
-            self.condition = weather_data.weather[0].main.clone();
-            self.icon = self.get_weather_icon(&self.condition);
-            self.last_update = now;
+            tokio::spawn(async move {
+                if let Ok(weather_data) = Self::fetch_weather_async().await {
+                    let now = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+
+                    if let Ok(mut data_guard) = data_clone.lock() {
+                        data_guard.temperature = format!("{:.0}", weather_data.main.temp);
+                        data_guard.condition = weather_data.weather[0].main.clone();
+                        data_guard.icon = Self::get_weather_icon(&data_guard.condition);
+                    }
+
+                    if let Ok(mut last_update_guard) = last_update_clone.lock() {
+                        *last_update_guard = now;
+                    }
+                }
+            });
         }
     }
 
-    fn fetch_weather(&self) -> color_eyre::Result<WeatherResponse> {
+    pub fn get_weather_data(&self) -> WeatherData {
+        self.data
+            .lock()
+            .unwrap_or_else(|_| panic!("Weather data mutex poisoned"))
+            .clone()
+    }
+
+    async fn fetch_weather_async() -> color_eyre::Result<WeatherResponse> {
         // Using a free weather API that doesn't require API key
         // Note: This uses wttr.in for current weather
         let url = "http://wttr.in/?format=j1";
 
-        let response = reqwest::blocking::get(url)?;
-        let json: serde_json::Value = response.json()?;
+        let response = reqwest::get(url).await?;
+        let json: serde_json::Value = response.json().await?;
 
         // Parse wttr.in response format
         if let Some(current) = json["current_condition"].get(0) {
@@ -84,7 +150,7 @@ impl Weather {
         Err(color_eyre::eyre::eyre!("Failed to parse weather data"))
     }
 
-    fn get_weather_icon(&self, condition: &str) -> String {
+    fn get_weather_icon(condition: &str) -> String {
         let condition_lower = condition.to_lowercase();
         match condition_lower.as_str() {
             cond if cond.contains("clear") || cond.contains("sunny") => "󰖙".to_string(),
@@ -98,4 +164,3 @@ impl Weather {
         }
     }
 }
-
