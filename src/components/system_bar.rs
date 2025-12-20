@@ -17,6 +17,8 @@ pub struct SystemBar {
     temperature: String,
     cpu_usage: String,
     ram_usage: String,
+    wifi_status: String,
+    wifi_network: String,
     brightness: String,
     volume: String,
     battery_percentage: String,
@@ -48,10 +50,15 @@ impl SystemBar {
             }
         };
 
+        let (wifi_status, wifi_network) =
+            get_wifi_status().unwrap_or(("disconnected".to_string(), "".to_string()));
+
         Ok(Self {
             temperature: "0".to_string(),
             cpu_usage: "0".to_string(),
             ram_usage: "0".to_string(),
+            wifi_status,
+            wifi_network,
             brightness: get_system_brightness().unwrap_or_default(),
             volume: get_system_volume().unwrap_or(0).to_string(),
             battery_percentage: ((battery.state_of_charge().value * 100.0) as i32).to_string(),
@@ -72,10 +79,9 @@ impl SystemBar {
             c.label().to_lowercase().contains("cpu")
                 || c.label().to_lowercase().contains("core")
                 || c.label().to_lowercase().contains("package")
-        }) {
-            if let Some(temp) = component.temperature() {
-                self.temperature = format!("{:.0}", temp);
-            }
+        }) && let Some(temp) = component.temperature()
+        {
+            self.temperature = format!("{:.0}", temp);
         }
 
         let iter = self.system.cpus().iter();
@@ -99,10 +105,28 @@ impl SystemBar {
         self.battery_percentage =
             ((self.battery.state_of_charge().value * 100.0) as i32).to_string();
 
+        // Update WiFi
+        if let Some((status, network)) = get_wifi_status() {
+            self.wifi_status = status;
+            self.wifi_network = network;
+        }
+
         Ok(())
     }
 
     pub fn render(&self, frame: &mut Frame, area: ratatui::layout::Rect) {
+        let wifi_icon = if self.wifi_status == "connected" {
+            "󰤨 "
+        } else {
+            "󰤮 "
+        };
+
+        let wifi_text = if self.wifi_status == "connected" && !self.wifi_network.is_empty() {
+            &self.wifi_network
+        } else {
+            "Off"
+        };
+
         let spans = vec![
             Span::raw(" "),
             Span::raw(self.temperature.clone() + "°C"),
@@ -112,6 +136,9 @@ impl SystemBar {
             Span::raw(" "),
             Span::raw("󰍛 "),
             Span::raw(self.ram_usage.clone() + "%"),
+            Span::raw(" | "),
+            Span::raw(wifi_icon),
+            Span::raw(wifi_text.to_string()),
             Span::raw(" | "),
             Span::raw("󰃠 "),
             Span::raw(self.brightness.clone()),
@@ -140,7 +167,7 @@ fn get_system_volume() -> Option<i32> {
 
     if output.status.success() {
         let stdout = str::from_utf8(&output.stdout).unwrap();
-        let parts: Vec<&str> = stdout.trim().split_whitespace().collect();
+        let parts: Vec<&str> = stdout.split_whitespace().collect();
 
         if let Ok(volume) = parts[1].parse::<f32>() {
             return Some((volume * 100.0) as i32);
@@ -180,4 +207,35 @@ fn get_system_brightness() -> Option<String> {
     }
 
     None
+}
+
+fn get_wifi_status() -> Option<(String, String)> {
+    let output = Command::new("nmcli")
+        .args(["-t", "-f", "TYPE,STATE,CONNECTION", "device"])
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let stdout = str::from_utf8(&output.stdout).ok()?;
+
+    for line in stdout.lines() {
+        if line.starts_with("wifi:") {
+            let parts: Vec<&str> = line.split(':').collect();
+            if parts.len() >= 3 {
+                let state = parts[1].to_lowercase();
+                let connection = parts[2].to_string();
+
+                if state == "connected" {
+                    return Some(("connected".to_string(), connection));
+                } else {
+                    return Some(("disconnected".to_string(), "".to_string()));
+                }
+            }
+        }
+    }
+
+    Some(("disconnected".to_string(), "".to_string()))
 }
