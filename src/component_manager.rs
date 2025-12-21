@@ -192,7 +192,20 @@ impl Component {
             Component::Battery(component) => {
                 let span = Span::raw(component.render());
                 if colorize {
-                    vec![span.fg(Color::Red)]
+                    let color = if component.is_charging {
+                        Color::Green
+                    } else if let Ok(percentage) = component.percentage.parse::<u32>() {
+                        if percentage <= 10 {
+                            Color::Red // Very low: Red
+                        } else if percentage <= 25 {
+                            Color::Yellow // Low: Yellow/Amber  
+                        } else {
+                            Color::Green // Normal/High: Green
+                        }
+                    } else {
+                        Color::Red
+                    };
+                    vec![span.fg(color)]
                 } else {
                     vec![span]
                 }
