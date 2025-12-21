@@ -84,8 +84,16 @@ impl RightBar {
             Span::raw("󰃠 "),
             Span::raw(self.brightness.level.clone()),
             Span::raw(" "),
-            Span::raw("󰕾 "),
-            Span::raw(self.volume.level.clone() + "%"),
+            if self.volume.is_muted {
+                Span::raw("󰝟 ").fg(Color::DarkGray)
+            } else {
+                Span::raw("󰕾 ")
+            },
+            if self.volume.is_muted {
+                Span::raw(self.volume.level.clone() + "%").fg(Color::DarkGray)
+            } else {
+                Span::raw(self.volume.level.clone() + "%")
+            },
             Span::raw(" | "),
             Span::raw(if self.battery.is_charging {
                 "󰂄 "
