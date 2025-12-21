@@ -127,7 +127,16 @@ impl Component {
             Component::Temperature(component) => {
                 let span = Span::raw(component.render());
                 if colorize {
-                    vec![span.fg(Color::Yellow)]
+                    let color = if let Ok(temp) = component.value.parse::<u32>() {
+                        if temp >= 80 {
+                            Color::Red // High temp: Red
+                        } else {
+                            Color::Yellow // Normal: Yellow
+                        }
+                    } else {
+                        Color::Yellow
+                    };
+                    vec![span.fg(color)]
                 } else {
                     vec![span]
                 }
@@ -135,7 +144,16 @@ impl Component {
             Component::Cpu(component) => {
                 let span = Span::raw(component.render());
                 if colorize {
-                    vec![span.fg(Color::Blue)]
+                    let color = if let Ok(usage) = component.usage.parse::<u32>() {
+                        if usage >= 90 {
+                            Color::Red // High CPU usage: Red
+                        } else {
+                            Color::Blue // Normal: Blue
+                        }
+                    } else {
+                        Color::Blue
+                    };
+                    vec![span.fg(color)]
                 } else {
                     vec![span]
                 }
@@ -143,7 +161,16 @@ impl Component {
             Component::Ram(component) => {
                 let span = Span::raw(component.render());
                 if colorize {
-                    vec![span.fg(Color::Green)]
+                    let color = if let Ok(usage) = component.usage.parse::<u32>() {
+                        if usage >= 90 {
+                            Color::Red // High RAM usage: Red
+                        } else {
+                            Color::Green // Normal: Green
+                        }
+                    } else {
+                        Color::Green
+                    };
+                    vec![span.fg(color)]
                 } else {
                     vec![span]
                 }
