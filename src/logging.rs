@@ -84,11 +84,10 @@ impl Logger {
 
 pub fn log_file_watcher_error(error: &str) {
     if let Ok(mut logger) = LOGGER.lock() {
-        if logger.is_none() {
-            if let Ok(new_logger) = Logger::new() {
+        if logger.is_none()
+            && let Ok(new_logger) = Logger::new() {
                 *logger = Some(new_logger);
             }
-        }
         
         if let Some(ref mut log) = *logger {
             let _ = log.write_log("FILE_WATCHER", error);
@@ -98,11 +97,10 @@ pub fn log_file_watcher_error(error: &str) {
 
 pub fn log_config_error(error: &str) {
     if let Ok(mut logger) = LOGGER.lock() {
-        if logger.is_none() {
-            if let Ok(new_logger) = Logger::new() {
+        if logger.is_none()
+            && let Ok(new_logger) = Logger::new() {
                 *logger = Some(new_logger);
             }
-        }
         
         if let Some(ref mut log) = *logger {
             let _ = log.write_log("CONFIG", error);
@@ -112,11 +110,10 @@ pub fn log_config_error(error: &str) {
 
 pub fn log_component_error(component_name: &str, error: &str) {
     if let Ok(mut logger) = LOGGER.lock() {
-        if logger.is_none() {
-            if let Ok(new_logger) = Logger::new() {
+        if logger.is_none()
+            && let Ok(new_logger) = Logger::new() {
                 *logger = Some(new_logger);
             }
-        }
         
         if let Some(ref mut log) = *logger {
             let _ = log.write_log(&format!("COMPONENT_{}", component_name.to_uppercase()), error);
@@ -126,11 +123,10 @@ pub fn log_component_error(component_name: &str, error: &str) {
 
 pub fn log_system_error(_context: &str, error: &str) {
     if let Ok(mut logger) = LOGGER.lock() {
-        if logger.is_none() {
-            if let Ok(new_logger) = Logger::new() {
+        if logger.is_none()
+            && let Ok(new_logger) = Logger::new() {
                 *logger = Some(new_logger);
             }
-        }
         
         if let Some(ref mut log) = *logger {
             let _ = log.write_log("SYSTEM", error);

@@ -58,7 +58,7 @@ fn get_workspaces() -> Option<Vec<String>> {
         return Some(json.iter().map(|j| j.id.clone().to_string()).collect());
     } else {
         logging::log_component_error("WORKSPACES", 
-            &str::from_utf8(&output.stderr).unwrap_or("unknown error"));
+            str::from_utf8(&output.stderr).unwrap_or("unknown error"));
     }
 
     None
@@ -78,7 +78,7 @@ fn get_active_workspace() -> Option<String> {
         return Some(json.id.clone().to_string());
     } else {
         logging::log_component_error("WORKSPACES", 
-            &str::from_utf8(&output.stderr).unwrap_or("unknown error"));
+            str::from_utf8(&output.stderr).unwrap_or("unknown error"));
     }
 
     None

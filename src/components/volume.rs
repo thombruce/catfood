@@ -47,7 +47,7 @@ fn get_system_volume() -> Option<(i32, bool)> {
         logging::log_component_error("VOLUME", &format!("Failed to parse volume from output: {}", stdout));
     } else {
         logging::log_component_error("VOLUME", 
-            &str::from_utf8(&output.stderr).unwrap_or("unknown error"));
+            str::from_utf8(&output.stderr).unwrap_or("unknown error"));
     }
 
     Some((0, false))

@@ -43,7 +43,7 @@ fn get_system_brightness() -> Option<String> {
         logging::log_component_error("BRIGHTNESS", &format!("Failed to parse brightness from output: {}", brightness_str));
     } else {
         logging::log_component_error("BRIGHTNESS", 
-            &str::from_utf8(&output.stderr).unwrap_or("unknown error"));
+            str::from_utf8(&output.stderr).unwrap_or("unknown error"));
     }
 
     None
