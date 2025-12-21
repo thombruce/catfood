@@ -5,9 +5,11 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct LuaComponent {
     name: String,
+    #[allow(dead_code)]
     lua: Lua,
     update_fn: Option<Function>,
     render_fn: Function,
+    #[allow(dead_code)]
     config: Option<Table>,
 }
 
@@ -47,17 +49,6 @@ impl LuaComponent {
                 .map_err(|e| color_eyre::eyre::eyre!("Failed to call update function: {}", e))?;
         }
         Ok(())
-    }
-
-    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
-        match self.render_fn.call::<String>((colorize,)) {
-            Ok(text) => {
-                vec![Span::raw(text)]
-            }
-            Err(_) => {
-                vec![Span::raw(format!("❌ {}", self.name))]
-            }
-        }
     }
 
     pub fn render_as_spans_with_colorize(&self, colorize: bool) -> Vec<Span<'_>> {
@@ -142,10 +133,6 @@ impl LuaComponentRegistry {
 
     pub fn get_component(&self, name: &str) -> Option<&LuaComponent> {
         self.components.get(name)
-    }
-
-    pub fn get_component_mut(&mut self, name: &str) -> Option<&mut LuaComponent> {
-        self.components.get_mut(name)
     }
 
     pub fn load_from_directory(&mut self, dir_path: &str) -> color_eyre::Result<()> {
