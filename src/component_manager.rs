@@ -126,7 +126,7 @@ impl Component {
             Component::Weather(component) => {
                 let span = Span::raw(component.render());
                 if colorize {
-                    vec![span.fg(Color::Green)]
+                    vec![span.fg(Color::White)]
                 } else {
                     vec![span]
                 }
@@ -155,10 +155,10 @@ impl Component {
                         if usage >= 90 {
                             Color::Red // High CPU usage: Red
                         } else {
-                            Color::Blue // Normal: Blue
+                            Color::White // Normal: White
                         }
                     } else {
-                        Color::Blue
+                        Color::White
                     };
                     vec![span.fg(color)]
                 } else {
@@ -211,7 +211,7 @@ impl Component {
             Component::Brightness(component) => {
                 let span = Span::raw(component.render());
                 if colorize {
-                    vec![span.fg(Color::Blue)]
+                    vec![span.fg(Color::White)]
                 } else {
                     vec![span]
                 }
@@ -220,7 +220,7 @@ impl Component {
                 if component.is_muted || !colorize {
                     vec![Span::raw(component.render())]
                 } else {
-                    vec![Span::raw(component.render()).fg(Color::Blue)]
+                    vec![Span::raw(component.render()).fg(Color::White)]
                 }
             }
             Component::Battery(component) => {
