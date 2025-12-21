@@ -29,13 +29,35 @@ impl Workspaces {
     }
 
     pub fn render(&self) -> Vec<Span<'_>> {
+        let rainbow_colors = [
+            Color::Red,      // 1
+            Color::Yellow,   // 2
+            Color::Green,    // 3
+            Color::Cyan,     // 4
+            Color::Blue,     // 5
+            Color::Magenta,  // 6
+            Color::LightRed, // 7
+        ];
+
         self.workspaces
             .iter()
             .map(|w| {
                 if w == &self.active_workspace {
-                    Span::raw(format!(" {} ", w))
-                        .bg(Color::White)
-                        .fg(Color::Black)
+                    if let Ok(workspace_num) = w.parse::<usize>() {
+                        let color_index = (workspace_num - 1) % rainbow_colors.len();
+                        let bg_color = rainbow_colors[color_index];
+                        // Use black text for better readability on all colored backgrounds
+                        Span::raw(format!(" {} ", w)).bg(bg_color).fg(Color::Black)
+                    } else {
+                        // Fallback for non-numeric workspace names
+                        Span::raw(format!(" {} ", w))
+                            .bg(Color::White)
+                            .fg(Color::Black)
+                    }
+                } else if let Ok(workspace_num) = w.parse::<usize>() {
+                    let color_index = (workspace_num - 1) % rainbow_colors.len();
+                    let color = rainbow_colors[color_index];
+                    Span::raw(format!(" {} ", w)).fg(color)
                 } else {
                     Span::raw(format!(" {} ", w))
                 }
