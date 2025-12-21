@@ -19,6 +19,16 @@ Bottom of screen:
 kitten panel --edge=bottom cargo run
 ```
 
+## Configuration
+
+catfoodBar supports live configuration via `~/.config/catfoodBar/config.json`. The first time you run the application, a default configuration file will be created.
+
+### Hot-Reload
+
+Configuration changes are automatically detected and applied without restarting the application. Simply edit your `config.json` file and the bar layout will update in real-time!
+
+See [CONFIG_EXAMPLE.md](CONFIG_EXAMPLE.md) for detailed configuration options and examples.
+
 ## License
 
 Copyright (c) Thom Bruce <thom@thombruce.com>

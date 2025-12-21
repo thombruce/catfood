@@ -220,4 +220,57 @@ impl ComponentManager {
             Vec::new()
         }
     }
+
+    pub fn reload(&mut self) -> color_eyre::Result<()> {
+        let new_config = self.config.reload()?;
+        let mut components = HashMap::new();
+        let mut unknown_components = Vec::new();
+
+        // Collect all component names for validation
+        let all_component_names: Vec<&String> = new_config.bars.left
+            .iter()
+            .chain(new_config.bars.middle.iter())
+            .chain(new_config.bars.right.iter())
+            .collect();
+
+        // Validate component names first
+        for component_name in &all_component_names {
+            if Component::new(component_name).is_err() {
+                unknown_components.push((*component_name).clone());
+            }
+        }
+
+        // Warn about unknown components
+        if !unknown_components.is_empty() {
+            eprintln!("Warning: Unknown components found in configuration: {:?}", unknown_components);
+            eprintln!("Available components: workspaces, time, weather, temperature, cpu, ram, wifi, vpn, brightness, volume, battery, separator, space");
+        }
+
+        // Create valid components
+        for component_name in &new_config.bars.left {
+            if let Ok(component) = Component::new(component_name) {
+                components.insert(component_name.clone(), component);
+            }
+        }
+
+        for component_name in &new_config.bars.middle {
+            if !components.contains_key(component_name)
+                && let Ok(component) = Component::new(component_name)
+            {
+                components.insert(component_name.clone(), component);
+            }
+        }
+
+        for component_name in &new_config.bars.right {
+            if !components.contains_key(component_name)
+                && let Ok(component) = Component::new(component_name)
+            {
+                components.insert(component_name.clone(), component);
+            }
+        }
+
+        self.config = new_config;
+        self.components = components;
+        Ok(())
+    }
 }

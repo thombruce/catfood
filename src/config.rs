@@ -87,6 +87,18 @@ impl Config {
             _ => None,
         }
     }
+
+    pub fn reload(&self) -> color_eyre::Result<Self> {
+        let config_path = Self::config_path();
+
+        if config_path.exists() {
+            let content = std::fs::read_to_string(&config_path)?;
+            let config: Config = serde_json::from_str(&content)?;
+            Ok(config)
+        } else {
+            Ok(Self::default())
+        }
+    }
 }
 
 
