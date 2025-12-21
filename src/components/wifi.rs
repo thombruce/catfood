@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::process::Command;
 use std::time::{Duration, Instant};
 
@@ -48,6 +49,20 @@ impl Wifi {
         };
 
         format!("{} {}", icon, network_text)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let color = if self.status == "disconnected" {
+                Color::Red // Disconnected: Red
+            } else {
+                Color::Blue // Connected: Blue
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 }
 

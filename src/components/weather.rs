@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -123,6 +124,37 @@ impl Weather {
     pub fn render(&self) -> String {
         let data = self.get_weather_data();
         format!("{} {}°C", data.icon, data.temperature)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let data = self.get_weather_data();
+            let color = {
+                let condition_lower = data.condition.to_lowercase();
+                if condition_lower.contains("clear") || condition_lower.contains("sunny") {
+                    Color::Yellow // Clear/Sunny: Yellow
+                } else if condition_lower.contains("cloud") || condition_lower.contains("overcast")
+                {
+                    Color::Gray // Cloudy/Overcast: Gray
+                } else if condition_lower.contains("rain") || condition_lower.contains("drizzle") {
+                    Color::Blue // Rain/Drizzle: Blue
+                } else if condition_lower.contains("snow") || condition_lower.contains("sleet") {
+                    Color::Cyan // Snow/Sleet: Cyan
+                } else if condition_lower.contains("thunder") || condition_lower.contains("storm") {
+                    Color::Magenta // Thunder/Storm: Magenta
+                } else if condition_lower.contains("fog") || condition_lower.contains("mist") {
+                    Color::DarkGray // Fog/Mist: Dark Gray
+                } else if condition_lower.contains("wind") {
+                    Color::LightGreen // Wind: Light Green
+                } else {
+                    Color::White // Unknown: White
+                }
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 
     async fn fetch_weather_async() -> color_eyre::Result<WeatherResponse> {

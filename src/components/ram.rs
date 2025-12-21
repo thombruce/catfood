@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::time::{Duration, Instant};
 use sysinfo::{MemoryRefreshKind, RefreshKind};
 
@@ -39,5 +40,23 @@ impl Ram {
 
     pub fn render(&self) -> String {
         format!("󰍛 {}%", self.usage)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let color = if let Ok(usage) = self.usage.parse::<u32>() {
+                if usage >= 90 {
+                    Color::Red // High RAM usage: Red
+                } else {
+                    Color::Green // Normal: Green
+                }
+            } else {
+                Color::Green
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 }

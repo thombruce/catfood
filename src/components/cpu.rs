@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::time::{Duration, Instant};
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
@@ -40,5 +41,23 @@ impl Cpu {
 
     pub fn render(&self) -> String {
         format!("󰻠 {}%", self.usage)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let color = if let Ok(usage) = self.usage.parse::<u32>() {
+                if usage >= 90 {
+                    Color::Red // High CPU usage: Red
+                } else {
+                    Color::White // Normal: White
+                }
+            } else {
+                Color::White
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 }

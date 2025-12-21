@@ -3,8 +3,7 @@ use crate::components::{
     Weather, Wifi, Workspaces,
 };
 use crate::config::Config;
-use chrono::Timelike;
-use ratatui::{prelude::Stylize, style::Color, text::Span};
+use ratatui::{prelude::Stylize, text::Span};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -109,172 +108,16 @@ impl Component {
     pub fn render_as_spans_with_colorize(&self, colorize: bool) -> Vec<Span<'_>> {
         match self {
             Component::Workspaces(component) => component.render(),
-            Component::Time(component) => {
-                let span = Span::raw(component.time_string.clone());
-                if colorize {
-                    let hour = chrono::Local::now().hour();
-                    let color = if (6..18).contains(&hour) {
-                        Color::Yellow // Daytime (6:00 - 17:59): Yellow
-                    } else {
-                        Color::Magenta // Nighttime (18:00 - 5:59): Purple
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Weather(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let data = component.get_weather_data();
-                    let color = {
-                        let condition_lower = data.condition.to_lowercase();
-                        if condition_lower.contains("clear") || condition_lower.contains("sunny") {
-                            Color::Yellow // Clear/Sunny: Yellow
-                        } else if condition_lower.contains("cloud")
-                            || condition_lower.contains("overcast")
-                        {
-                            Color::Gray // Cloudy/Overcast: Gray
-                        } else if condition_lower.contains("rain")
-                            || condition_lower.contains("drizzle")
-                        {
-                            Color::Blue // Rain/Drizzle: Blue
-                        } else if condition_lower.contains("snow")
-                            || condition_lower.contains("sleet")
-                        {
-                            Color::Cyan // Snow/Sleet: Cyan
-                        } else if condition_lower.contains("thunder")
-                            || condition_lower.contains("storm")
-                        {
-                            Color::Magenta // Thunder/Storm: Magenta
-                        } else if condition_lower.contains("fog")
-                            || condition_lower.contains("mist")
-                        {
-                            Color::DarkGray // Fog/Mist: Dark Gray
-                        } else if condition_lower.contains("wind") {
-                            Color::LightGreen // Wind: Light Green
-                        } else {
-                            Color::White // Unknown: White
-                        }
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Temperature(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let color = if let Ok(temp) = component.value.parse::<u32>() {
-                        if temp >= 80 {
-                            Color::Red // High temp: Red
-                        } else {
-                            Color::Yellow // Normal: Yellow
-                        }
-                    } else {
-                        Color::Yellow
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Cpu(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let color = if let Ok(usage) = component.usage.parse::<u32>() {
-                        if usage >= 90 {
-                            Color::Red // High CPU usage: Red
-                        } else {
-                            Color::White // Normal: White
-                        }
-                    } else {
-                        Color::White
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Ram(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let color = if let Ok(usage) = component.usage.parse::<u32>() {
-                        if usage >= 90 {
-                            Color::Red // High RAM usage: Red
-                        } else {
-                            Color::Green // Normal: Green
-                        }
-                    } else {
-                        Color::Green
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Wifi(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let color = if component.status == "disconnected" {
-                        Color::Red
-                    } else {
-                        Color::Blue
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Vpn(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let color = if component.status == "disconnected" {
-                        Color::DarkGray
-                    } else {
-                        Color::Magenta
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Brightness(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    vec![span.fg(Color::White)]
-                } else {
-                    vec![span]
-                }
-            }
-            Component::Volume(component) => {
-                if component.is_muted || !colorize {
-                    vec![Span::raw(component.render())]
-                } else {
-                    vec![Span::raw(component.render()).fg(Color::White)]
-                }
-            }
-            Component::Battery(component) => {
-                let span = Span::raw(component.render());
-                if colorize {
-                    let color = if component.is_charging {
-                        Color::Green
-                    } else if let Ok(percentage) = component.percentage.parse::<u32>() {
-                        if percentage <= 10 {
-                            Color::Red // Very low: Red
-                        } else if percentage <= 25 {
-                            Color::Yellow // Low: Yellow/Amber  
-                        } else {
-                            Color::Green // Normal/High: Green
-                        }
-                    } else {
-                        Color::Red
-                    };
-                    vec![span.fg(color)]
-                } else {
-                    vec![span]
-                }
-            }
+            Component::Time(component) => component.render_as_spans(colorize),
+            Component::Weather(component) => component.render_as_spans(colorize),
+            Component::Temperature(component) => component.render_as_spans(colorize),
+            Component::Cpu(component) => component.render_as_spans(colorize),
+            Component::Ram(component) => component.render_as_spans(colorize),
+            Component::Wifi(component) => component.render_as_spans(colorize),
+            Component::Vpn(component) => component.render_as_spans(colorize),
+            Component::Brightness(component) => component.render_as_spans(colorize),
+            Component::Volume(component) => component.render_as_spans(colorize),
+            Component::Battery(component) => component.render_as_spans(colorize),
             Component::Separator(component) => vec![Span::raw(component.render())],
             Component::Space(component) => vec![Span::raw(component.render())],
             Component::ErrorIcon(component) => component.render_as_spans(),
@@ -293,7 +136,7 @@ impl Component {
         if self.is_muted() {
             spans
                 .into_iter()
-                .map(|span| span.fg(Color::DarkGray))
+                .map(|span| span.fg(ratatui::style::Color::DarkGray))
                 .collect()
         } else {
             spans

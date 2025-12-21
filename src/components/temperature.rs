@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::time::{Duration, Instant};
 use sysinfo::Components;
 
@@ -41,5 +42,23 @@ impl Temperature {
 
     pub fn render(&self) -> String {
         format!(" {}°C", self.value)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let color = if let Ok(temp) = self.value.parse::<u32>() {
+                if temp >= 80 {
+                    Color::Red // High temp: Red
+                } else {
+                    Color::Yellow // Normal: Yellow
+                }
+            } else {
+                Color::Yellow
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 }

@@ -1,4 +1,5 @@
 use crate::logging;
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::time::{Duration, Instant};
 
 #[derive(Debug)]
@@ -56,5 +57,27 @@ impl Battery {
     pub fn render(&self) -> String {
         let icon = if self.is_charging { "󰂄" } else { "󰁹" };
         format!("{} {}%", icon, self.percentage)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let color = if self.is_charging {
+                Color::Green
+            } else if let Ok(percentage) = self.percentage.parse::<u32>() {
+                if percentage <= 10 {
+                    Color::Red // Very low: Red
+                } else if percentage <= 25 {
+                    Color::Yellow // Low: Yellow/Amber  
+                } else {
+                    Color::Green // Normal/High: Green
+                }
+            } else {
+                Color::Red
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 }

@@ -1,4 +1,5 @@
 use crate::logging;
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use regex::Regex;
 use std::process::Command;
 
@@ -23,6 +24,15 @@ impl Brightness {
 
     pub fn render(&self) -> String {
         format!("󰃠 {}", self.level)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            vec![span.fg(Color::White)]
+        } else {
+            vec![span]
+        }
     }
 }
 

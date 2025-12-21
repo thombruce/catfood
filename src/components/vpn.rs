@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::collections::HashMap;
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -43,6 +44,20 @@ impl Vpn {
 
     pub fn render(&self) -> String {
         format!(" {}", self.short)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        let span = Span::raw(self.render());
+        if colorize {
+            let color = if self.status == "disconnected" {
+                Color::DarkGray // Disconnected: Dark Gray
+            } else {
+                Color::Magenta // Connected: Purple
+            };
+            vec![span.fg(color)]
+        } else {
+            vec![span]
+        }
     }
 }
 

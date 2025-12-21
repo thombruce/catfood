@@ -1,3 +1,4 @@
+use ratatui::{prelude::Stylize, style::Color, text::Span};
 use std::process::Command;
 
 use crate::logging;
@@ -26,6 +27,14 @@ impl Volume {
     pub fn render(&self) -> String {
         let icon = if self.is_muted { "󰝟" } else { "󰕾" };
         format!("{} {}%", icon, self.level)
+    }
+
+    pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
+        if self.is_muted || !colorize {
+            vec![Span::raw(self.render())]
+        } else {
+            vec![Span::raw(self.render()).fg(Color::White)]
+        }
     }
 }
 
