@@ -1,5 +1,5 @@
 use crate::components::{
-    Battery, Brightness, Cpu, ErrorIcon, Ram, Separator, Space, Temperature, Time, Volume, Vpn,
+    Battery, Brightness, Cpu, ErrorIcon, Ram, Separator, Space, Temperature, Time, Volume,
     Weather, Wifi, Workspaces,
 };
 use crate::config::Config;
@@ -16,7 +16,6 @@ pub enum Component {
     Cpu(Cpu),
     Ram(Ram),
     Wifi(Wifi),
-    Vpn(Vpn),
     Brightness(Brightness),
     Volume(Volume),
     Battery(Battery),
@@ -39,7 +38,6 @@ impl Component {
             "cpu" => Ok(Component::Cpu(Cpu::new())),
             "ram" => Ok(Component::Ram(Ram::new())),
             "wifi" => Ok(Component::Wifi(Wifi::new())),
-            "vpn" => Ok(Component::Vpn(Vpn::new())),
             "brightness" => Ok(Component::Brightness(Brightness::new())),
             "volume" => Ok(Component::Volume(Volume::new())),
             "battery" => Ok(Component::Battery(Battery::new()?)),
@@ -87,10 +85,6 @@ impl Component {
                 component.update();
                 Ok(())
             }
-            Component::Vpn(component) => {
-                component.update();
-                Ok(())
-            }
             Component::Brightness(component) => {
                 component.update();
                 Ok(())
@@ -131,7 +125,6 @@ impl Component {
             Component::Cpu(component) => component.render_as_spans(colorize),
             Component::Ram(component) => component.render_as_spans(colorize),
             Component::Wifi(component) => component.render_as_spans(colorize),
-            Component::Vpn(component) => component.render_as_spans(colorize),
             Component::Brightness(component) => component.render_as_spans(colorize),
             Component::Volume(component) => component.render_as_spans(colorize),
             Component::Battery(component) => component.render_as_spans(colorize),
