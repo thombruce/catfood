@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 #[derive(Debug)]
 pub struct Battery {
     pub percentage: String,
+    pub is_charging: bool,
     battery_manager: battery::Manager,
     battery: battery::Battery,
     last_update: Instant,
@@ -24,12 +25,15 @@ impl Battery {
             }
         };
 
+        let is_charging = matches!(battery.state(), battery::State::Charging);
+
         Ok(Self {
             percentage: ((battery.state_of_charge().value * 100.0) as i32).to_string(),
+            is_charging,
             battery_manager: manager,
             battery,
             last_update: Instant::now(),
-            update_interval: Duration::from_secs(30),
+            update_interval: Duration::from_secs(3),
         })
     }
 
@@ -38,7 +42,8 @@ impl Battery {
         if now.duration_since(self.last_update) >= self.update_interval {
             self.battery_manager.refresh(&mut self.battery)?;
             self.percentage = ((self.battery.state_of_charge().value * 100.0) as i32).to_string();
-            
+            self.is_charging = matches!(self.battery.state(), battery::State::Charging);
+
             self.last_update = now;
         }
         Ok(())

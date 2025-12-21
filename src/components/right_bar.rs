@@ -87,7 +87,11 @@ impl RightBar {
             Span::raw("󰕾 "),
             Span::raw(self.volume.level.clone() + "%"),
             Span::raw(" | "),
-            Span::raw("󰁹 "),
+            Span::raw(if self.battery.is_charging {
+                "󰂄 "
+            } else {
+                "󰁹 "
+            }),
             Span::raw(self.battery.percentage.clone() + "%"),
         ];
 
