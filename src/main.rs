@@ -12,6 +12,7 @@ mod component_manager;
 mod components;
 mod config;
 mod logging;
+mod lua_component;
 
 use component_manager::ComponentManager;
 use components::{LeftBar, MiddleBar, RightBar};

@@ -1,0 +1,24 @@
+{
+  "bars": {
+    "left": ["workspaces"],
+    "middle": ["lua_clock", "separator", "weather"],
+    "right": [
+      "temperature",
+      "space",
+      "cpu",
+      "space",
+      "ram",
+      "separator",
+      "wifi",
+      "space",
+      "vpn",
+      "separator",
+      "brightness",
+      "space",
+      "volume",
+      "separator",
+      "battery"
+    ]
+  },
+  "colorize": true
+}

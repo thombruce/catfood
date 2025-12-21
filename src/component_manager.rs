@@ -3,6 +3,7 @@ use crate::components::{
     Weather, Wifi, Workspaces,
 };
 use crate::config::Config;
+use crate::lua_component::{LuaComponent, LuaComponentRegistry};
 use ratatui::{prelude::Stylize, text::Span};
 use std::collections::HashMap;
 
@@ -22,10 +23,14 @@ pub enum Component {
     Separator(Separator),
     Space(Space),
     ErrorIcon(ErrorIcon),
+    Lua(LuaComponent),
 }
 
 impl Component {
-    pub fn new(component_type: &str) -> color_eyre::Result<Self> {
+    pub fn new(
+        component_type: &str,
+        lua_registry: Option<&LuaComponentRegistry>,
+    ) -> color_eyre::Result<Self> {
         match component_type {
             "workspaces" => Ok(Component::Workspaces(Workspaces::new())),
             "time" => Ok(Component::Time(Time::new())),
@@ -40,7 +45,15 @@ impl Component {
             "battery" => Ok(Component::Battery(Battery::new()?)),
             "separator" => Ok(Component::Separator(Separator::new())),
             "space" => Ok(Component::Space(Space::new())),
-            _ => Ok(Component::ErrorIcon(ErrorIcon::new())),
+            _ => {
+                // Try to load as Lua component
+                if let Some(registry) = lua_registry
+                    && let Some(lua_component) = registry.get_component(component_type)
+                {
+                    return Ok(Component::Lua(lua_component.clone()));
+                }
+                Ok(Component::ErrorIcon(ErrorIcon::new()))
+            }
         }
     }
 
@@ -102,6 +115,10 @@ impl Component {
                 // ErrorIcon doesn't need updates
                 Ok(())
             }
+            Component::Lua(component) => {
+                component.update()?;
+                Ok(())
+            }
         }
     }
 
@@ -121,6 +138,7 @@ impl Component {
             Component::Separator(component) => vec![Span::raw(component.render())],
             Component::Space(component) => vec![Span::raw(component.render())],
             Component::ErrorIcon(component) => component.render_as_spans(),
+            Component::Lua(component) => component.render_as_spans_with_colorize(colorize),
         }
     }
 
@@ -148,40 +166,57 @@ impl Component {
 pub struct ComponentManager {
     components: HashMap<String, Component>,
     config: Config,
+    lua_registry: LuaComponentRegistry,
 }
 
 impl ComponentManager {
     pub fn new() -> color_eyre::Result<Self> {
         let config = Config::load()?;
+        let mut lua_registry = LuaComponentRegistry::new();
+
+        // Load Lua components from config directory
+        let config_dir =
+            std::path::PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".to_string()))
+                .join(".config")
+                .join("catfoodBar")
+                .join("components");
+        lua_registry.load_from_directory(config_dir.to_str().unwrap())?;
+
         let mut components = HashMap::new();
 
         // Create all components (unknown ones become error icons)
         for component_name in &config.bars.left {
-            let component = Component::new(component_name)?;
+            let component = Component::new(component_name, Some(&lua_registry))?;
             components.insert(component_name.clone(), component);
         }
 
         for component_name in &config.bars.middle {
             if !components.contains_key(component_name) {
-                let component = Component::new(component_name)?;
+                let component = Component::new(component_name, Some(&lua_registry))?;
                 components.insert(component_name.clone(), component);
             }
         }
 
         for component_name in &config.bars.right {
             if !components.contains_key(component_name) {
-                let component = Component::new(component_name)?;
+                let component = Component::new(component_name, Some(&lua_registry))?;
                 components.insert(component_name.clone(), component);
             }
         }
 
-        Ok(Self { components, config })
+        Ok(Self {
+            components,
+            config,
+            lua_registry,
+        })
     }
 
     pub fn update(&mut self) -> color_eyre::Result<()> {
+        // Update built-in components
         for component in self.components.values_mut() {
             component.update()?;
         }
+
         Ok(())
     }
 
@@ -202,24 +237,35 @@ impl ComponentManager {
 
     pub fn reload(&mut self) -> color_eyre::Result<()> {
         let new_config = self.config.reload()?;
+
+        // Reload Lua components
+        let config_dir =
+            std::path::PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".to_string()))
+                .join(".config")
+                .join("catfoodBar")
+                .join("components");
+        self.lua_registry = LuaComponentRegistry::new();
+        self.lua_registry
+            .load_from_directory(config_dir.to_str().unwrap())?;
+
         let mut components = HashMap::new();
 
         // Create all components (unknown ones become error icons)
         for component_name in &new_config.bars.left {
-            let component = Component::new(component_name)?;
+            let component = Component::new(component_name, Some(&self.lua_registry))?;
             components.insert(component_name.clone(), component);
         }
 
         for component_name in &new_config.bars.middle {
             if !components.contains_key(component_name) {
-                let component = Component::new(component_name)?;
+                let component = Component::new(component_name, Some(&self.lua_registry))?;
                 components.insert(component_name.clone(), component);
             }
         }
 
         for component_name in &new_config.bars.right {
             if !components.contains_key(component_name) {
-                let component = Component::new(component_name)?;
+                let component = Component::new(component_name, Some(&self.lua_registry))?;
                 components.insert(component_name.clone(), component);
             }
         }

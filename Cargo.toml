@@ -24,6 +24,7 @@ reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1.0", features = ["full"] }
 notify = "6.1"
 lazy_static = "1.4"
+mlua = { version = "0.10", features = ["lua54", "vendored"] }
 
 
 # Read the optimization guideline for more details: https://ratatui.rs/recipes/apps/release-your-app/#optimizations
