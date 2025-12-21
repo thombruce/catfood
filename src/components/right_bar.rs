@@ -26,6 +26,7 @@ impl RightBar {
         component_manager: &ComponentManager,
     ) {
         let components = component_manager.get_bar_components("right");
+        let colorize = component_manager.get_colorize();
 
         if components.is_empty() {
             return;
@@ -33,7 +34,7 @@ impl RightBar {
 
         let spans: Vec<Span> = components
             .iter()
-            .flat_map(|component| component.render_as_spans_with_muting())
+            .flat_map(|component| component.render_as_spans_with_muting_and_colorize(colorize))
             .collect();
 
         let right_line = Line::from(spans);

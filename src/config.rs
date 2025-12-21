@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub bars: BarsConfig,
+    pub colorize: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,6 +41,7 @@ impl Default for Config {
                     "battery".to_string(),
                 ],
             },
+            colorize: true,
         }
     }
 }

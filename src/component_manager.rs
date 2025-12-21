@@ -105,19 +105,88 @@ impl Component {
         }
     }
 
-    pub fn render_as_spans(&self) -> Vec<Span<'_>> {
+    pub fn render_as_spans_with_colorize(&self, colorize: bool) -> Vec<Span<'_>> {
         match self {
             Component::Workspaces(component) => component.render(),
-            Component::Time(component) => vec![Span::raw(component.time_string.clone())],
-            Component::Weather(component) => vec![Span::raw(component.render())],
-            Component::Temperature(component) => vec![Span::raw(component.render())],
-            Component::Cpu(component) => vec![Span::raw(component.render())],
-            Component::Ram(component) => vec![Span::raw(component.render())],
-            Component::Wifi(component) => vec![Span::raw(component.render())],
-            Component::Vpn(component) => vec![Span::raw(component.render())],
-            Component::Brightness(component) => vec![Span::raw(component.render())],
-            Component::Volume(component) => vec![Span::raw(component.render())],
-            Component::Battery(component) => vec![Span::raw(component.render())],
+            Component::Time(component) => {
+                let span = Span::raw(component.time_string.clone());
+                if colorize {
+                    vec![span.fg(Color::Blue)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Weather(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Green)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Temperature(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Yellow)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Cpu(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Blue)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Ram(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Green)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Wifi(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Blue)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Vpn(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Magenta)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Brightness(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Blue)]
+                } else {
+                    vec![span]
+                }
+            }
+            Component::Volume(component) => {
+                if component.is_muted || !colorize {
+                    vec![Span::raw(component.render())]
+                } else {
+                    vec![Span::raw(component.render()).fg(Color::Blue)]
+                }
+            }
+            Component::Battery(component) => {
+                let span = Span::raw(component.render());
+                if colorize {
+                    vec![span.fg(Color::Red)]
+                } else {
+                    vec![span]
+                }
+            }
             Component::Separator(component) => vec![Span::raw(component.render())],
             Component::Space(component) => vec![Span::raw(component.render())],
             Component::ErrorIcon(component) => component.render_as_spans(),
@@ -131,8 +200,8 @@ impl Component {
         }
     }
 
-    pub fn render_as_spans_with_muting(&self) -> Vec<Span<'_>> {
-        let spans = self.render_as_spans();
+    pub fn render_as_spans_with_muting_and_colorize(&self, colorize: bool) -> Vec<Span<'_>> {
+        let spans = self.render_as_spans_with_colorize(colorize);
         if self.is_muted() {
             spans
                 .into_iter()
@@ -194,6 +263,10 @@ impl ComponentManager {
         } else {
             Vec::new()
         }
+    }
+
+    pub fn get_colorize(&self) -> bool {
+        self.config.colorize
     }
 
     pub fn reload(&mut self) -> color_eyre::Result<()> {

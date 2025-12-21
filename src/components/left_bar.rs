@@ -26,6 +26,7 @@ impl LeftBar {
         component_manager: &ComponentManager,
     ) {
         let components = component_manager.get_bar_components("left");
+        let colorize = component_manager.get_colorize();
 
         if components.is_empty() {
             return;
@@ -33,7 +34,7 @@ impl LeftBar {
 
         let spans: Vec<Span> = components
             .iter()
-            .flat_map(|component| component.render_as_spans())
+            .flat_map(|component| component.render_as_spans_with_colorize(colorize))
             .collect();
 
         let left_line = Line::from(spans);

@@ -26,6 +26,7 @@ impl MiddleBar {
         component_manager: &ComponentManager,
     ) {
         let components = component_manager.get_bar_components("middle");
+        let colorize = component_manager.get_colorize();
 
         if components.is_empty() {
             return;
@@ -33,7 +34,7 @@ impl MiddleBar {
 
         let spans: Vec<Span> = components
             .iter()
-            .flat_map(|component| component.render_as_spans())
+            .flat_map(|component| component.render_as_spans_with_colorize(colorize))
             .collect();
 
         let middle_line = Line::from(spans);
