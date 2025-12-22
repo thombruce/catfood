@@ -139,39 +139,6 @@ jobs:
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Install git-cliff
-        run: cargo install git-cliff
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          # Get previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [[ -n "$PREV_TAG" ]]; then
-            CHANGELOG=$(REPO_URL=https://github.com/thombruce/catfood git-cliff --config cliff.toml --latest --tag "${{ needs.validate.outputs.version }}" --preceding-tag "$PREV_TAG")
-          else
-            CHANGELOG=$(REPO_URL=https://github.com/thombruce/catfood git-cliff --config cliff.toml --latest --tag "${{ needs.validate.outputs.version }}" --unreleased)
-          fi
-          
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          # Update CHANGELOG.md
-          echo "$CHANGELOG" > CHANGELOG.md.new
-          if [[ -f CHANGELOG.md ]]; then
-            tail -n +2 CHANGELOG.md >> CHANGELOG.md.new
-          fi
-          mv CHANGELOG.md.new CHANGELOG.md
-
-      - name: Commit changelog
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add CHANGELOG.md
-          git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for v${{ needs.validate.outputs.version }}"
-
       - name: Run tests and checks before publishing
         run: |
           cargo fmt --all --check
@@ -199,7 +166,7 @@ jobs:
         with:
           tag_name: v${{ needs.validate.outputs.version }}
           name: Release v${{ needs.validate.outputs.version }}
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: "Release v${{ needs.validate.outputs.version }}"
           draft: false
           prerelease: false
           files: artifacts/**/*
