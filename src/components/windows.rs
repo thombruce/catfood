@@ -8,6 +8,7 @@ use crate::logging;
 struct Window {
     address: String,
     class: String,
+    title: String,
     workspace: Workspace,
 }
 
@@ -107,14 +108,41 @@ fn get_windows() -> Option<(Vec<WindowInfo>, String)> {
         .filter(|w| w.workspace.id > 0) // Filter out special workspaces
         .map(|w| WindowInfo {
             address: w.address.clone(),
-            icon: get_app_icon(&w.class),
+            icon: get_app_icon(&w.class, &w.title),
         })
         .collect();
 
     Some((window_infos, active_address))
 }
 
-fn get_app_icon(class: &str) -> String {
+fn get_app_icon(class: &str, title: &str) -> String {
+    // First check title for terminal applications with specific commands
+    let title_lower = title.to_lowercase();
+    if title_lower.starts_with("nvim") || title_lower.contains("neovim") {
+        return "".to_string();
+    } else if title_lower.starts_with("vim") {
+        return "".to_string();
+    } else if title_lower.starts_with("emacs") {
+        return "󰍹".to_string();
+    } else if title_lower.starts_with("nano") {
+        return "".to_string();
+    } else if title_lower.starts_with("htop") || title_lower.starts_with("btop") {
+        return "󰔚".to_string();
+    } else if title_lower.starts_with("yazi") {
+        return "󰇥".to_string();
+    } else if title_lower.starts_with("ranger") || title_lower.starts_with("lf") {
+        return "󰉋".to_string();
+    } else if title_lower.starts_with("git") {
+        return "󰊢".to_string();
+    } else if title_lower.starts_with("man") {
+        return "󰍹".to_string();
+    } else if title_lower.starts_with("ssh") {
+        return "󰣀".to_string();
+    } else if title_lower.starts_with("cmus") || title_lower.starts_with("ncmpcpp") {
+        return "󰓇".to_string();
+    }
+
+    // Fall back to class-based detection
     match class.to_lowercase().as_str() {
         // Browsers
         "firefox" | "firefox-developer-edition" => "󰈹".to_string(),
@@ -127,16 +155,15 @@ fn get_app_icon(class: &str) -> String {
         "edge" => "󰇩".to_string(),
         "helium" => "󰖟".to_string(),
 
-        // Terminal & Editors
+        // Terminal Emulators (fallback when title doesn't match specific commands)
         "kitty" => "󰄛".to_string(),
         "alacritty" => "󰆍".to_string(),
         "gnome-terminal" => "󰆍".to_string(),
         "konsole" => "󰆍".to_string(),
         "xterm" => "󰆍".to_string(),
+
+        // Standalone Editor Applications (GUI-based)
         "neovide" => "".to_string(),
-        "nvim" | "neovim" => "".to_string(),
-        "vim" => "".to_string(),
-        "emacs" => "󰍹".to_string(),
         "code" | "code-oss" => "󰨞".to_string(),
         "sublime_text" => "󰅪".to_string(),
 
@@ -184,16 +211,13 @@ fn get_app_icon(class: &str) -> String {
         "thunderbird" => "󰇰".to_string(),
         "geary" => "󰇰".to_string(),
 
-        // File Managers
+        // File Managers (GUI-based)
         "thunar" => "󰉋".to_string(),
         "dolphin" => "󰉋".to_string(),
         "nautilus" => "󰉋".to_string(),
         "pcmanfm" => "󰉋".to_string(),
-        "ranger" => "󰉋".to_string(),
-        "lf" => "󰉋".to_string(),
 
-        // System Tools
-        "htop" | "btop" => "󰔚".to_string(),
+        // System Tools (GUI-based)
         "nvtop" => "󰍛".to_string(),
         "pavucontrol" => "󰝚".to_string(),
         "networkmanager_dmenu" => "󰤨".to_string(),
