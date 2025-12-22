@@ -149,9 +149,9 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
           if [[ -n "$PREV_TAG" ]]; then
-            CHANGELOG=$(git-cliff --config cliff.toml --latest --tag "${{ needs.validate.outputs.version }}" --preceding-tag "$PREV_TAG")
+            CHANGELOG=$(git-cliff --config cliff.toml --latest --tag "${{ needs.validate.outputs.version }}" --preceding-tag "$PREV_TAG" --template "{% for group, commits in commits | group_by(attribute=\"group\") %}### {{ group | upper_first }}{% for commit in commits %}- {{ commit.message | upper_first }}{% endfor %}\n\n{% endfor %}")
           else
-            CHANGELOG=$(git-cliff --config cliff.toml --latest --tag "${{ needs.validate.outputs.version }}" --unreleased)
+            CHANGELOG=$(git-cliff --config cliff.toml --latest --tag "${{ needs.validate.outputs.version }}" --unreleased --template "{% for group, commits in commits | group_by(attribute=\"group\") %}### {{ group | upper_first }}{% for commit in commits %}- {{ commit.message | upper_first }}{% endfor %}\n\n{% endfor %}")
           fi
           
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
