@@ -1,4 +1,4 @@
-# TODO - catfoodBar Widget Development
+# TODO - catfood_bar Widget Development
 
 ## Current State
 - Rust-based system status bar built with Ratatui

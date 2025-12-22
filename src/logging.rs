@@ -22,11 +22,11 @@ impl Logger {
         });
 
         // Create logs directory
-        let log_dir = PathBuf::from(data_dir).join("catfoodBar").join("logs");
+        let log_dir = PathBuf::from(data_dir).join("catfood_bar").join("logs");
         std::fs::create_dir_all(&log_dir)?;
 
         // Create log file
-        let log_path = log_dir.join("catfoodBar.log");
+        let log_path = log_dir.join("catfood_bar.log");
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
@@ -34,7 +34,7 @@ impl Logger {
 
         // Initialize log with header
         let timestamp = Utc::now().to_rfc3339();
-        writeln!(file, "\n\n=== catfoodBar started at {} ===", timestamp)?;
+        writeln!(file, "\n\n=== catfood_bar started at {} ===", timestamp)?;
 
         Ok(Self { file })
     }

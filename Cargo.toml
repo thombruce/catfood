@@ -1,5 +1,5 @@
 [package]
-name = "catfoodBar"
+name = "catfood_bar"
 version = "0.1.0"
 description = "An example generated using the simple template"
 authors = ["Thom Bruce <thom@thombruce.com>"]
@@ -12,10 +12,6 @@ ratatui = "0.29.0"
 color-eyre = "0.6.3"
 chrono = "0.4.42"
 battery = "0.7.8"
-# TODO: sysinfo is quite a large dependency, providing info for MacOS and Windows as well as Linux, right?
-# Consider requiring only what is explicitly needed... which, given that catfoodBar will right now only work on
-# Linux, means Linux-specific features. Alternatively... keep it and consider generalising Linux-specific
-# code to work on other operating systems.
 sysinfo = "0.37.2"
 regex = "1.12.2"
 serde_json = "1.0.145"

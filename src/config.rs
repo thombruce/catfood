@@ -31,8 +31,6 @@ impl Default for Config {
                     "ram".to_string(),
                     "separator".to_string(),
                     "wifi".to_string(),
-                    "space".to_string(),
-                    "vpn".to_string(),
                     "separator".to_string(),
                     "brightness".to_string(),
                     "space".to_string(),
@@ -77,7 +75,7 @@ impl Config {
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
         std::path::PathBuf::from(home_dir)
             .join(".config")
-            .join("catfoodBar")
+            .join("catfood_bar")
             .join("config.json")
     }
 

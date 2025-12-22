@@ -67,7 +67,7 @@ impl App {
         let config_path =
             std::path::PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".to_string()))
                 .join(".config")
-                .join("catfoodBar")
+                .join("catfood_bar")
                 .join("config.json");
 
         tokio::spawn(async move {

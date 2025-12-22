@@ -1,10 +1,10 @@
 # Lua Components Extensibility
 
-catfoodBar now supports custom Lua components that can be placed in any of the three bar areas (left, middle, right) alongside the built-in components.
+catfood_bar now supports custom Lua components that can be placed in any of the three bar areas (left, middle, right) alongside the built-in components.
 
 ## How it Works
 
-1. **Component Loading**: Lua components are automatically loaded from `~/.config/catfoodBar/components/`
+1. **Component Loading**: Lua components are automatically loaded from `~/.config/catfood_bar/components/`
 2. **Configuration**: Components are referenced by name in `config.json` just like built-in components
 3. **Integration**: Lua components are treated the same as built-in components for updates and rendering
 
@@ -116,12 +116,12 @@ Add Lua components to your `config.json`:
 
 1. Create the components directory:
    ```bash
-   mkdir -p ~/.config/catfoodBar/components
+   mkdir -p ~/.config/catfood_bar/components
    ```
 
 2. Add your Lua component files (`.lua` extension)
 3. Reference them in `config.json` by filename (without extension)
-4. Restart catfoodBar or wait for automatic config reload
+4. Restart catfood_bar or wait for automatic config reload
 
 ## Error Handling
 

@@ -3,7 +3,7 @@
 This configuration file allows you to customize which components appear in each bar section.
 
 ## Location
-`~/.config/catfoodBar/config.json`
+`~/.config/catfood_bar/config.json`
 
 ## Available Components
 - `workspaces` - Hyprland workspaces
@@ -13,7 +13,6 @@ This configuration file allows you to customize which components appear in each 
 - `cpu` - CPU usage
 - `ram` - Memory usage
 - `wifi` - WiFi connection status
-- `vpn` - VPN connection status
 - `brightness` - Screen brightness
 - `volume` - Volume level
 - `battery` - Battery status
@@ -33,7 +32,6 @@ This configuration file allows you to customize which components appear in each 
       "ram",
       "separator",
       "wifi",
-      "vpn",
       "separator",
       "brightness",
       "volume",
@@ -74,7 +72,7 @@ This configuration file allows you to customize which components appear in each 
   "bars": {
     "left": ["workspaces"],
     "middle": ["time", "separator", "weather"],
-    "right": ["wifi", "separator", "vpn", "separator", "battery"]
+    "right": ["wifi", "separator", "separator", "battery"]
   }
 }
 ```
@@ -88,7 +86,7 @@ This configuration file allows you to customize which components appear in each 
     "right": [
       "temperature", "cpu", "ram",
       "separator", "separator",
-      "wifi", "vpn",
+      "wifi",
       "separator",
       "brightness", "volume", "battery"
     ]
@@ -105,7 +103,7 @@ This configuration file allows you to customize which components appear in each 
     "right": [
       "temperature", "space", "cpu", "space", "ram",
       "separator",
-      "wifi", "space", "vpn",
+      "wifi", "space",
       "separator",
       "brightness", "space", "volume", "space", "battery"
     ]
@@ -133,4 +131,4 @@ The configuration system provides two spacing components:
 
 You can use multiple `space` components in a row for larger gaps, or combine `space` and `separator` for custom layouts. For example, `["space", "separator", "space"]` would create " | " with extra spacing around the separator.
 
-The first time you run catfoodBar, it will create a default configuration file at `~/.config/catfoodBar/config.json`. You can then edit this file to customize your bar layout.
+The first time you run catfood_bar, it will create a default configuration file at `~/.config/catfood_bar/config.json`. You can then edit this file to customize your bar layout.
