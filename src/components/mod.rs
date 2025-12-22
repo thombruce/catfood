@@ -13,6 +13,7 @@ pub mod time;
 pub mod volume;
 pub mod weather;
 pub mod wifi;
+pub mod windows;
 pub mod workspaces;
 
 pub use battery::Battery;
@@ -30,4 +31,5 @@ pub use time::Time;
 pub use volume::Volume;
 pub use weather::Weather;
 pub use wifi::Wifi;
+pub use windows::Windows;
 pub use workspaces::Workspaces;

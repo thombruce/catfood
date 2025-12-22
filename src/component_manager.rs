@@ -1,6 +1,6 @@
 use crate::components::{
     Battery, Brightness, Cpu, ErrorIcon, Ram, Separator, Space, Temperature, Time, Volume, Weather,
-    Wifi, Workspaces,
+    Wifi, Windows, Workspaces,
 };
 use crate::config::Config;
 use crate::lua_component::{LuaComponent, LuaComponentRegistry};
@@ -10,6 +10,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub enum Component {
     Workspaces(Workspaces),
+    Windows(Windows),
     Time(Time),
     Weather(Weather),
     Temperature(Temperature),
@@ -32,6 +33,7 @@ impl Component {
     ) -> color_eyre::Result<Self> {
         match component_type {
             "workspaces" => Ok(Component::Workspaces(Workspaces::new())),
+            "windows" => Ok(Component::Windows(Windows::new())),
             "time" => Ok(Component::Time(Time::new())),
             "weather" => Ok(Component::Weather(Weather::new())),
             "temperature" => Ok(Component::Temperature(Temperature::new())),
@@ -58,6 +60,10 @@ impl Component {
     pub fn update(&mut self) -> color_eyre::Result<()> {
         match self {
             Component::Workspaces(component) => {
+                component.update();
+                Ok(())
+            }
+            Component::Windows(component) => {
                 component.update();
                 Ok(())
             }
@@ -119,6 +125,7 @@ impl Component {
     pub fn render_as_spans_with_colorize(&self, colorize: bool) -> Vec<Span<'_>> {
         match self {
             Component::Workspaces(component) => component.render(),
+            Component::Windows(component) => component.render(),
             Component::Time(component) => component.render_as_spans(colorize),
             Component::Weather(component) => component.render_as_spans(colorize),
             Component::Temperature(component) => component.render_as_spans(colorize),
