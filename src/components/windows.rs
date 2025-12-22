@@ -26,6 +26,8 @@ struct Workspace {
 pub struct WindowInfo {
     address: String,
     icon: String,
+    class: String,
+    title: String,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -54,10 +56,9 @@ impl Windows {
             .iter()
             .map(|w| {
                 if w.address == self.active_window {
-                    // Focused window: white background with black text
-                    Span::raw(format!(" {} ", w.icon))
-                        .bg(Color::White)
-                        .fg(Color::Black)
+                    // Focused window: brand color background with appropriate text color
+                    let (bg_color, fg_color) = get_brand_color(&w.class, &w.title);
+                    Span::raw(format!(" {} ", w.icon)).bg(bg_color).fg(fg_color)
                 } else {
                     // Unfocused window: white text on default background
                     Span::raw(format!(" {} ", w.icon)).fg(Color::White)
@@ -109,6 +110,8 @@ fn get_windows() -> Option<(Vec<WindowInfo>, String)> {
         .map(|w| WindowInfo {
             address: w.address.clone(),
             icon: get_app_icon(&w.class, &w.title),
+            class: w.class.clone(),
+            title: w.title.clone(),
         })
         .collect();
 
@@ -254,5 +257,117 @@ fn get_app_icon(class: &str, title: &str) -> String {
 
         // Default fallback
         _ => "󰍜".to_string(),
+    }
+}
+
+fn get_brand_color(class: &str, title: &str) -> (Color, Color) {
+    // First check title for terminal applications with specific commands
+    let title_lower = title.to_lowercase();
+    let class_lower = class.to_lowercase();
+
+    // Terminal-based applications - use title
+    if title_lower.starts_with("nvim") || title_lower.contains("neovim") {
+        return (Color::Rgb(0, 107, 84), Color::White); // Neovim Green
+    } else if title_lower.starts_with("vim") {
+        return (Color::Rgb(19, 134, 71), Color::White); // Vim Green
+    } else if title_lower.starts_with("emacs") {
+        return (Color::Rgb(146, 35, 127), Color::White); // Emacs Purple
+    } else if title_lower.starts_with("htop") || title_lower.starts_with("btop") {
+        return (Color::Rgb(255, 152, 0), Color::Black); // System Monitor Orange
+    } else if title_lower.starts_with("yazi") {
+        return (Color::Rgb(255, 200, 87), Color::Black); // Yazi Yellow
+    } else if title_lower.starts_with("ranger") || title_lower.starts_with("lf") {
+        return (Color::Rgb(41, 128, 185), Color::White); // File Manager Blue
+    } else if title_lower.starts_with("git") {
+        return (Color::Rgb(240, 80, 50), Color::White); // Git Orange
+    } else if title_lower.starts_with("ssh") {
+        return (Color::Rgb(0, 100, 200), Color::White); // SSH Blue
+    } else if title_lower.starts_with("cmus") || title_lower.starts_with("ncmpcpp") {
+        return (Color::Rgb(29, 185, 84), Color::White); // Music Green
+    }
+
+    // Fall back to class-based colors
+    match class_lower.as_str() {
+        // Browsers
+        "firefox" | "firefox-developer-edition" | "librewolf" => {
+            (Color::Rgb(255, 119, 0), Color::Black)
+        } // Firefox Orange
+        "google-chrome" | "chrome" | "chromium" => (Color::Rgb(66, 133, 244), Color::Black), // Google Blue
+        "brave-browser" => (Color::Rgb(250, 72, 41), Color::White), // Brave Red
+        "vivaldi" | "opera" => (Color::Rgb(235, 90, 70), Color::White), // Vivaldi/Opera Red
+        "edge" => (Color::Rgb(0, 120, 215), Color::White),          // Edge Blue
+        "helium" => (Color::Rgb(0, 184, 169), Color::White),        // Helium Teal
+
+        // Terminal Emulators
+        "kitty" => (Color::Rgb(103, 117, 140), Color::White), // Kitty Gray
+        "alacritty" | "gnome-terminal" | "konsole" | "xterm" => {
+            (Color::Rgb(46, 52, 64), Color::White)
+        } // Terminal Dark
+
+        // GUI Editors
+        "neovide" => (Color::Rgb(0, 107, 84), Color::White), // Neovim Green
+        "code" | "code-oss" => (Color::Rgb(27, 127, 243), Color::White), // VS Code Blue
+        "sublime_text" => (Color::Rgb(255, 93, 0), Color::White), // Sublime Orange
+
+        // PDF Viewers
+        "zathura" | "evince" | "okular" | "qpdfview" | "mupdf" => {
+            (Color::Rgb(198, 40, 40), Color::White)
+        } // PDF Red
+
+        // Image Viewers
+        "qview" | "feh" | "nomacs" | "gwenview" | "eog" | "sxiv" => {
+            (Color::Rgb(156, 39, 176), Color::White)
+        } // Image Purple
+
+        // Video Players
+        "mpv" | "vlc" | "smplayer" | "celluloid" => (Color::Rgb(237, 101, 46), Color::White), // Video Orange
+
+        // Music Players
+        "spotify" | "rhythmbox" | "audacious" => (Color::Rgb(29, 185, 84), Color::White), // Music Green
+
+        // Graphics & Design
+        "gimp" | "krita" => (Color::Rgb(103, 72, 145), Color::White), // GIMP/Krita Purple
+        "aseprite" => (Color::Rgb(255, 255, 255), Color::Black),      // Aseprite White
+        "inkscape" => (Color::Rgb(0, 116, 178), Color::White),        // Inkscape Blue
+        "blender" => (Color::Rgb(245, 129, 49), Color::White),        // Blender Orange
+        "obs" => (Color::Rgb(146, 52, 220), Color::White),            // OBS Purple
+
+        // Communication
+        "discord" => (Color::Rgb(88, 101, 242), Color::White), // Discord Blue
+        "telegramdesktop" | "telegram" => (Color::Rgb(39, 156, 204), Color::White), // Telegram Blue
+        "slack" => (Color::Rgb(254, 0, 84), Color::White),     // Slack Red
+        "signal" => (Color::Rgb(83, 189, 238), Color::White),  // Signal Blue
+        "thunderbird" | "geary" => (Color::Rgb(0, 112, 193), Color::White), // Email Blue
+
+        // File Managers (GUI)
+        "thunar" | "dolphin" | "nautilus" | "pcmanfm" => (Color::Rgb(41, 128, 185), Color::White), // FM Blue
+
+        // System Tools (GUI)
+        "nvtop" => (Color::Rgb(0, 173, 181), Color::White), // GPU Monitor Teal
+        "pavucontrol" => (Color::Rgb(233, 84, 32), Color::White), // Audio Control Orange
+        "networkmanager_dmenu" => (Color::Rgb(0, 184, 169), Color::White), // Network Teal
+
+        // Office
+        "libreoffice-writer" | "onlyoffice-desktopeditors" => {
+            (Color::Rgb(18, 52, 86), Color::White)
+        } // Office Blue
+        "libreoffice-calc" => (Color::Rgb(43, 87, 135), Color::White), // Calc Green
+        "libreoffice-impress" => (Color::Rgb(233, 63, 51), Color::White), // Impress Red
+
+        // Development Tools
+        "postman" => (Color::Rgb(255, 89, 94), Color::White), // Postman Orange
+        "insomnia" => (Color::Rgb(148, 66, 156), Color::White), // Insomnia Purple
+        "gitkraken" => (Color::Rgb(64, 84, 178), Color::White), // GitKraken Blue
+        "figma-linux" => (Color::Rgb(0, 112, 243), Color::White), // Figma Blue
+        "wine" | "winecfg" => (Color::Rgb(143, 31, 35), Color::White), // Wine Red
+
+        // Games
+        "steam" => (Color::Rgb(0, 47, 71), Color::White), // Steam Dark Blue
+        "lutris" => (Color::Rgb(201, 32, 44), Color::White), // Lutris Red
+        "heroic" => (Color::Rgb(162, 49, 162), Color::White), // Heroic Purple
+        "minecraft" => (Color::Rgb(46, 125, 50), Color::White), // Minecraft Green
+
+        // Default
+        _ => (Color::Gray, Color::White),
     }
 }
