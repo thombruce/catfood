@@ -17,7 +17,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             bars: BarsConfig {
-                left: vec!["workspaces".to_string()],
+                left: vec!["workspaces".to_string(), "windows".to_string()],
                 middle: vec![
                     "time".to_string(),
                     "separator".to_string(),
