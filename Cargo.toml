@@ -10,8 +10,8 @@ version = "0.1.0"
 authors = ["Thom Bruce <thom@thombruce.com>"]
 license = "MIT"
 edition = "2024"
-repository = "https://github.com/thombruce/catfood_bar"
-homepage = "https://github.com/thombruce/catfood_bar"
+repository = "https://github.com/thombruce/catfood"
+homepage = "https://github.com/thombruce/catfood"
 description = "A modular utility suite for system management, built with Rust and Ratatui"
 
 [workspace.metadata.release]
