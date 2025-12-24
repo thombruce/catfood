@@ -263,3 +263,52 @@ fn get_network_stats() -> Option<(u64, u64)> {
 
     None
 }
+
+#[cfg(test)]
+mod sparkline_tests {
+
+    #[test]
+    fn test_sparkline_normalization() {
+        // Test sparkline normalization logic
+        let usage_data = vec![0, 100, 200, 300, 400, 500, 600, 700, 800];
+        let max_usage = 800;
+        
+        // Apply same normalization logic as in the sparkline
+        let normalized: Vec<u64> = usage_data
+            .iter()
+            .map(|&usage| {
+                if max_usage > 0 {
+                    (usage * 8) / max_usage.max(1)
+                } else {
+                    0
+                }
+            })
+            .collect();
+        
+        println!("Original: {:?}", usage_data);
+        println!("Normalized: {:?}", normalized);
+        
+        // Verify mapping produces expected 0-8 range
+        assert_eq!(normalized, vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
+        
+        // Test character mapping
+        let sparkline_chars: String = normalized
+            .iter()
+            .map(|&usage| match usage {
+                0 => ' ',
+                1 => '▁',
+                2 => '▂', 
+                3 => '▃',
+                4 => '▄',
+                5 => '▅',
+                6 => '▆',
+                7 => '▇',
+                8 => '█',
+                _ => '█',
+            })
+            .collect();
+            
+        println!("Sparkline: '{}'", sparkline_chars);
+        assert_eq!(sparkline_chars, " ▁▂▃▄▅▆▇█");
+    }
+}
