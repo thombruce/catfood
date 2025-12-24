@@ -1,5 +1,9 @@
 # Development Commands
 
+## IMPORTANT: Repository Policy
+- NEVER commit or push code without explicit user permission
+- Always run `cargo clippy` and `cargo fmt` when making changes
+
 ## Build, Test, and Lint
 - `cargo build` - Build the project
 - `cargo run` - Run the application  
