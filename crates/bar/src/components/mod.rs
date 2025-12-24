@@ -58,12 +58,12 @@ macro_rules! define_configurable_components {
 
 // Define all configurable components here
 // This single declaration handles:
-// 1. From trait implementations 
+// 1. From trait implementations
 // 2. Registration function generation
 //
 // To add a new configurable component:
 // 1. Create a Config struct with serde deserialization
-// 2. Implement ConfigurableComponent trait for your component  
+// 2. Implement ConfigurableComponent trait for your component
 // 3. Add the component to this macro
 // 4. That's it! The macro handles all the boilerplate
 define_configurable_components!(
@@ -89,7 +89,7 @@ impl ConfigurableComponentRegistry {
         };
 
         // Auto-register all built-in configurable components using the macro-generated function
-        // This makes it easy to add new configurable components - just add them to the 
+        // This makes it easy to add new configurable components - just add them to the
         // define_configurable_components! macro above
         register_all_configurable_components(&mut registry);
 
