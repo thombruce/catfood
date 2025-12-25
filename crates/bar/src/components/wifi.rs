@@ -19,6 +19,7 @@ impl Wifi {
         sparkline: bool,
         sparkline_length: usize,
         sparkline_update_freq: u64,
+        sparkline_logarithmic: bool,
     ) -> Self {
         let (status, network) =
             get_wifi_status().unwrap_or(("disconnected".to_string(), "".to_string()));
@@ -35,7 +36,7 @@ impl Wifi {
             "Off"
         };
 
-        let sparkline = Sparkline::new(sparkline, sparkline_length);
+        let sparkline = Sparkline::new(sparkline, sparkline_length, sparkline_logarithmic);
         let cached_span_content = if sparkline.enabled {
             format!("{} {}", icon, sparkline.render_with_spaces())
         } else {

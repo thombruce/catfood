@@ -16,6 +16,8 @@ pub struct ComponentOptions {
     pub sparkline_length: Option<usize>,
     #[serde(default)]
     pub sparkline_update_freq: Option<u64>,
+    #[serde(default)]
+    pub sparkline_logarithmic: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,6 +150,13 @@ impl ComponentConfig {
         match self {
             ComponentConfig::String(_) => None,
             ComponentConfig::Object(options) => options.sparkline_update_freq,
+        }
+    }
+
+    pub fn sparkline_logarithmic(&self) -> Option<bool> {
+        match self {
+            ComponentConfig::String(_) => None,
+            ComponentConfig::Object(options) => options.sparkline_logarithmic,
         }
     }
 }

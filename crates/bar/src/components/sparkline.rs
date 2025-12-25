@@ -3,14 +3,16 @@ pub struct Sparkline {
     pub enabled: bool,
     pub length: usize,
     pub data: Vec<u64>,
+    pub logarithmic: bool,
 }
 
 impl Sparkline {
-    pub fn new(enabled: bool, length: usize) -> Self {
+    pub fn new(enabled: bool, length: usize, logarithmic: bool) -> Self {
         Self {
             enabled,
             length,
             data: vec![0; length],
+            logarithmic,
         }
     }
 
@@ -38,7 +40,14 @@ impl Sparkline {
             if value == 0 {
                 result.push(' ');
             } else {
-                let index = ((value as f64 / *max_value as f64) * (bars.len() - 1) as f64) as usize;
+                let normalized = if self.logarithmic {
+                    // Log scale: log10(value) / log10(max_value)
+                    (value as f64).log10() / (*max_value as f64).log10()
+                } else {
+                    // Linear scale (current behavior)
+                    value as f64 / *max_value as f64
+                };
+                let index = (normalized * (bars.len() - 1) as f64) as usize;
                 result.push(bars[index.min(bars.len() - 1)].chars().next().unwrap());
             }
         }

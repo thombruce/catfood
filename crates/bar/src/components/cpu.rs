@@ -18,13 +18,14 @@ impl Cpu {
         sparkline: bool,
         sparkline_length: usize,
         sparkline_update_freq: u64,
+        sparkline_logarithmic: bool,
     ) -> Self {
         let system = System::new_with_specifics(
             RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
         );
 
         let usage = "0".to_string();
-        let sparkline = Sparkline::new(sparkline, sparkline_length);
+        let sparkline = Sparkline::new(sparkline, sparkline_length, sparkline_logarithmic);
         let cached_span_content = if sparkline.enabled {
             format!("󰻠 {}", sparkline.render_with_spaces())
         } else {

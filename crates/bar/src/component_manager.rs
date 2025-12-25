@@ -42,30 +42,39 @@ impl Component {
                 let sparkline = component_config.sparkline().unwrap_or(false);
                 let sparkline_length = component_config.sparkline_length().unwrap_or(10);
                 let sparkline_update_freq = component_config.sparkline_update_freq().unwrap_or(3);
+                let sparkline_logarithmic =
+                    component_config.sparkline_logarithmic().unwrap_or(false); // Linear by default
                 Ok(Component::Cpu(Cpu::with_config(
                     sparkline,
                     sparkline_length,
                     sparkline_update_freq,
+                    sparkline_logarithmic,
                 )))
             }
             "ram" => {
                 let sparkline = component_config.sparkline().unwrap_or(false);
                 let sparkline_length = component_config.sparkline_length().unwrap_or(10);
                 let sparkline_update_freq = component_config.sparkline_update_freq().unwrap_or(2);
+                let sparkline_logarithmic =
+                    component_config.sparkline_logarithmic().unwrap_or(false); // Linear by default
                 Ok(Component::Ram(Ram::with_config(
                     sparkline,
                     sparkline_length,
                     sparkline_update_freq,
+                    sparkline_logarithmic,
                 )))
             }
             "wifi" => {
                 let sparkline = component_config.sparkline().unwrap_or(false);
                 let sparkline_length = component_config.sparkline_length().unwrap_or(10);
                 let sparkline_update_freq = component_config.sparkline_update_freq().unwrap_or(2);
+                let sparkline_logarithmic =
+                    component_config.sparkline_logarithmic().unwrap_or(true); // Logarithmic by default for WiFi
                 Ok(Component::Wifi(Wifi::with_config(
                     sparkline,
                     sparkline_length,
                     sparkline_update_freq,
+                    sparkline_logarithmic,
                 )))
             }
             "brightness" => Ok(Component::Brightness(Brightness::new())),
