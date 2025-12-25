@@ -38,8 +38,26 @@ impl Component {
             "time" => Ok(Component::Time(Time::new())),
             "weather" => Ok(Component::Weather(Weather::new())),
             "temperature" => Ok(Component::Temperature(Temperature::new())),
-            "cpu" => Ok(Component::Cpu(Cpu::new())),
-            "ram" => Ok(Component::Ram(Ram::new())),
+            "cpu" => {
+                let sparkline = component_config.sparkline().unwrap_or(false);
+                let sparkline_length = component_config.sparkline_length().unwrap_or(10);
+                let sparkline_update_freq = component_config.sparkline_update_freq().unwrap_or(3);
+                Ok(Component::Cpu(Cpu::with_config(
+                    sparkline,
+                    sparkline_length,
+                    sparkline_update_freq,
+                )))
+            }
+            "ram" => {
+                let sparkline = component_config.sparkline().unwrap_or(false);
+                let sparkline_length = component_config.sparkline_length().unwrap_or(10);
+                let sparkline_update_freq = component_config.sparkline_update_freq().unwrap_or(2);
+                Ok(Component::Ram(Ram::with_config(
+                    sparkline,
+                    sparkline_length,
+                    sparkline_update_freq,
+                )))
+            }
             "wifi" => {
                 let sparkline = component_config.sparkline().unwrap_or(false);
                 let sparkline_length = component_config.sparkline_length().unwrap_or(10);
