@@ -2,7 +2,7 @@ use crate::components::{
     Battery, Brightness, Cpu, ErrorIcon, Ram, Separator, Space, Temperature, Time, Volume, Weather,
     Wifi, Windows, Workspaces,
 };
-use crate::config::Config;
+use crate::config::{ComponentConfig, Config};
 use crate::lua_component::{LuaComponent, LuaComponentRegistry};
 use ratatui::{prelude::Stylize, text::Span};
 use std::collections::HashMap;
@@ -28,9 +28,10 @@ pub enum Component {
 
 impl Component {
     pub fn new(
-        component_type: &str,
+        component_config: &ComponentConfig,
         lua_registry: Option<&LuaComponentRegistry>,
     ) -> color_eyre::Result<Self> {
+        let component_type = component_config.name();
         match component_type {
             "workspaces" => Ok(Component::Workspaces(Workspaces::new())),
             "windows" => Ok(Component::Windows(Windows::new())),
@@ -39,7 +40,16 @@ impl Component {
             "temperature" => Ok(Component::Temperature(Temperature::new())),
             "cpu" => Ok(Component::Cpu(Cpu::new())),
             "ram" => Ok(Component::Ram(Ram::new())),
-            "wifi" => Ok(Component::Wifi(Wifi::new())),
+            "wifi" => {
+                let sparkline = component_config.sparkline().unwrap_or(false);
+                let sparkline_length = component_config.sparkline_length().unwrap_or(10);
+                let sparkline_update_freq = component_config.sparkline_update_freq().unwrap_or(2);
+                Ok(Component::Wifi(Wifi::with_config(
+                    sparkline,
+                    sparkline_length,
+                    sparkline_update_freq,
+                )))
+            }
             "brightness" => Ok(Component::Brightness(Brightness::new())),
             "volume" => Ok(Component::Volume(Volume::new())),
             "battery" => Ok(Component::Battery(Battery::new()?)),
@@ -185,22 +195,22 @@ impl ComponentManager {
         let mut components = HashMap::new();
 
         // Create all components (unknown ones become error icons)
-        for component_name in &config.bars.left {
-            let component = Component::new(component_name, Some(&lua_registry))?;
-            components.insert(component_name.clone(), component);
+        for component_config in &config.bars.left {
+            let component = Component::new(component_config, Some(&lua_registry))?;
+            components.insert(component_config.name().to_string(), component);
         }
 
-        for component_name in &config.bars.middle {
-            if !components.contains_key(component_name) {
-                let component = Component::new(component_name, Some(&lua_registry))?;
-                components.insert(component_name.clone(), component);
+        for component_config in &config.bars.middle {
+            if !components.contains_key(component_config.name()) {
+                let component = Component::new(component_config, Some(&lua_registry))?;
+                components.insert(component_config.name().to_string(), component);
             }
         }
 
-        for component_name in &config.bars.right {
-            if !components.contains_key(component_name) {
-                let component = Component::new(component_name, Some(&lua_registry))?;
-                components.insert(component_name.clone(), component);
+        for component_config in &config.bars.right {
+            if !components.contains_key(component_config.name()) {
+                let component = Component::new(component_config, Some(&lua_registry))?;
+                components.insert(component_config.name().to_string(), component);
             }
         }
 
@@ -221,10 +231,10 @@ impl ComponentManager {
     }
 
     pub fn get_bar_components(&self, bar: &str) -> Vec<&Component> {
-        if let Some(component_names) = self.config.get_components_for_bar(bar) {
-            component_names
+        if let Some(component_configs) = self.config.get_components_for_bar(bar) {
+            component_configs
                 .iter()
-                .filter_map(|name| self.components.get(name))
+                .filter_map(|config| self.components.get(config.name()))
                 .collect()
         } else {
             Vec::new()
@@ -251,22 +261,22 @@ impl ComponentManager {
         let mut components = HashMap::new();
 
         // Create all components (unknown ones become error icons)
-        for component_name in &new_config.bars.left {
-            let component = Component::new(component_name, Some(&self.lua_registry))?;
-            components.insert(component_name.clone(), component);
+        for component_config in &new_config.bars.left {
+            let component = Component::new(component_config, Some(&self.lua_registry))?;
+            components.insert(component_config.name().to_string(), component);
         }
 
-        for component_name in &new_config.bars.middle {
-            if !components.contains_key(component_name) {
-                let component = Component::new(component_name, Some(&self.lua_registry))?;
-                components.insert(component_name.clone(), component);
+        for component_config in &new_config.bars.middle {
+            if !components.contains_key(component_config.name()) {
+                let component = Component::new(component_config, Some(&self.lua_registry))?;
+                components.insert(component_config.name().to_string(), component);
             }
         }
 
-        for component_name in &new_config.bars.right {
-            if !components.contains_key(component_name) {
-                let component = Component::new(component_name, Some(&self.lua_registry))?;
-                components.insert(component_name.clone(), component);
+        for component_config in &new_config.bars.right {
+            if !components.contains_key(component_config.name()) {
+                let component = Component::new(component_config, Some(&self.lua_registry))?;
+                components.insert(component_config.name().to_string(), component);
             }
         }
 

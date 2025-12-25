@@ -9,10 +9,22 @@ pub struct Wifi {
     cached_span_content: String,
     last_update: Instant,
     update_interval: Duration,
+    sparkline: bool,
+    sparkline_length: usize,
+    sparkline_data: Vec<u64>,
+    last_bytes: Option<u64>,
 }
 
 impl Wifi {
     pub fn new() -> Self {
+        Self::with_config(false, 10, 2)
+    }
+
+    pub fn with_config(
+        sparkline: bool,
+        sparkline_length: usize,
+        sparkline_update_freq: u64,
+    ) -> Self {
         let (status, network) =
             get_wifi_status().unwrap_or(("disconnected".to_string(), "".to_string()));
 
@@ -28,14 +40,23 @@ impl Wifi {
             "Off"
         };
 
-        let cached_span_content = format!("{} {}", icon, network_text);
+        let cached_span_content = if sparkline {
+            let sparkline_str = " ".repeat(sparkline_length);
+            format!("{} {}", icon, sparkline_str)
+        } else {
+            format!("{} {}", icon, network_text)
+        };
 
         Self {
             status,
             network,
             cached_span_content,
             last_update: Instant::now(),
-            update_interval: Duration::from_secs(2),
+            update_interval: Duration::from_secs(sparkline_update_freq),
+            sparkline,
+            sparkline_length,
+            sparkline_data: vec![0; sparkline_length],
+            last_bytes: None,
         }
     }
 
@@ -46,20 +67,41 @@ impl Wifi {
                 self.status = status;
                 self.network = network;
 
-                // Update cached span content
                 let icon = if self.status == "connected" {
                     "󰤨"
                 } else {
                     "󰤮"
                 };
 
-                let network_text = if self.status == "connected" && !self.network.is_empty() {
-                    &self.network
-                } else {
-                    "Off"
-                };
+                if self.sparkline {
+                    if let Some(current_bytes) = get_network_usage() {
+                        let usage = if let Some(last_bytes) = self.last_bytes {
+                            current_bytes.saturating_sub(last_bytes)
+                        } else {
+                            0
+                        };
 
-                self.cached_span_content = format!("{} {}", icon, network_text);
+                        self.last_bytes = Some(current_bytes);
+
+                        // Update sparkline data (shift left and add new value)
+                        self.sparkline_data.remove(0);
+                        self.sparkline_data.push(usage);
+
+                        // Render sparkline
+                        let sparkline_str = self.render_sparkline();
+                        self.cached_span_content = format!("{} {}", icon, sparkline_str);
+                    } else {
+                        self.cached_span_content =
+                            format!("{} {}", icon, " ".repeat(self.sparkline_length));
+                    }
+                } else {
+                    let network_text = if self.status == "connected" && !self.network.is_empty() {
+                        &self.network
+                    } else {
+                        "Off"
+                    };
+                    self.cached_span_content = format!("{} {}", icon, network_text);
+                }
             }
 
             self.last_update = now;
@@ -78,6 +120,27 @@ impl Wifi {
         } else {
             vec![span]
         }
+    }
+
+    fn render_sparkline(&self) -> String {
+        let max_value = self.sparkline_data.iter().max().unwrap_or(&1);
+        if *max_value == 0 {
+            return " ".repeat(self.sparkline_length);
+        }
+
+        let bars = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+        let mut result = String::new();
+
+        for &value in &self.sparkline_data {
+            if value == 0 {
+                result.push(' ');
+            } else {
+                let index = ((value as f64 / *max_value as f64) * (bars.len() - 1) as f64) as usize;
+                result.push(bars[index.min(bars.len() - 1)].chars().next().unwrap());
+            }
+        }
+
+        result
     }
 }
 
@@ -110,4 +173,27 @@ fn get_wifi_status() -> Option<(String, String)> {
     }
 
     Some(("disconnected".to_string(), "".to_string()))
+}
+
+fn get_network_usage() -> Option<u64> {
+    let content = std::fs::read_to_string("/proc/net/dev").ok()?;
+
+    for line in content.lines().skip(2) {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 10 {
+            let interface = parts[0].trim_end_matches(':');
+            // Look for wireless interfaces (common prefixes)
+            if interface.starts_with("wlan")
+                || interface.starts_with("wifi")
+                || interface.starts_with("wl")
+            {
+                // Return sum of received and transmitted bytes
+                let rx_bytes: u64 = parts[1].parse().ok()?;
+                let tx_bytes: u64 = parts[9].parse().ok()?;
+                return Some(rx_bytes + tx_bytes);
+            }
+        }
+    }
+
+    None
 }

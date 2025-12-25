@@ -1,6 +1,24 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ComponentConfig {
+    String(String),
+    Object(ComponentOptions),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComponentOptions {
+    pub name: String,
+    #[serde(default)]
+    pub sparkline: Option<bool>,
+    #[serde(default)]
+    pub sparkline_length: Option<usize>,
+    #[serde(default)]
+    pub sparkline_update_freq: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub bars: BarsConfig,
     pub colorize: bool,
@@ -8,35 +26,38 @@ pub struct Config {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BarsConfig {
-    pub left: Vec<String>,
-    pub middle: Vec<String>,
-    pub right: Vec<String>,
+    pub left: Vec<ComponentConfig>,
+    pub middle: Vec<ComponentConfig>,
+    pub right: Vec<ComponentConfig>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             bars: BarsConfig {
-                left: vec!["workspaces".to_string(), "windows".to_string()],
+                left: vec![
+                    ComponentConfig::String("workspaces".to_string()),
+                    ComponentConfig::String("windows".to_string()),
+                ],
                 middle: vec![
-                    "time".to_string(),
-                    "separator".to_string(),
-                    "weather".to_string(),
+                    ComponentConfig::String("time".to_string()),
+                    ComponentConfig::String("separator".to_string()),
+                    ComponentConfig::String("weather".to_string()),
                 ],
                 right: vec![
-                    "temperature".to_string(),
-                    "space".to_string(),
-                    "cpu".to_string(),
-                    "space".to_string(),
-                    "ram".to_string(),
-                    "separator".to_string(),
-                    "wifi".to_string(),
-                    "separator".to_string(),
-                    "brightness".to_string(),
-                    "space".to_string(),
-                    "volume".to_string(),
-                    "separator".to_string(),
-                    "battery".to_string(),
+                    ComponentConfig::String("temperature".to_string()),
+                    ComponentConfig::String("space".to_string()),
+                    ComponentConfig::String("cpu".to_string()),
+                    ComponentConfig::String("space".to_string()),
+                    ComponentConfig::String("ram".to_string()),
+                    ComponentConfig::String("separator".to_string()),
+                    ComponentConfig::String("wifi".to_string()),
+                    ComponentConfig::String("separator".to_string()),
+                    ComponentConfig::String("brightness".to_string()),
+                    ComponentConfig::String("space".to_string()),
+                    ComponentConfig::String("volume".to_string()),
+                    ComponentConfig::String("separator".to_string()),
+                    ComponentConfig::String("battery".to_string()),
                 ],
             },
             colorize: true,
@@ -79,7 +100,7 @@ impl Config {
             .join("bar.json")
     }
 
-    pub fn get_components_for_bar(&self, bar: &str) -> Option<&Vec<String>> {
+    pub fn get_components_for_bar(&self, bar: &str) -> Option<&Vec<ComponentConfig>> {
         match bar {
             "left" => Some(&self.bars.left),
             "middle" => Some(&self.bars.middle),
@@ -97,6 +118,36 @@ impl Config {
             Ok(config)
         } else {
             Ok(Self::default())
+        }
+    }
+}
+
+impl ComponentConfig {
+    pub fn name(&self) -> &str {
+        match self {
+            ComponentConfig::String(name) => name,
+            ComponentConfig::Object(options) => &options.name,
+        }
+    }
+
+    pub fn sparkline(&self) -> Option<bool> {
+        match self {
+            ComponentConfig::String(_) => None,
+            ComponentConfig::Object(options) => options.sparkline,
+        }
+    }
+
+    pub fn sparkline_length(&self) -> Option<usize> {
+        match self {
+            ComponentConfig::String(_) => None,
+            ComponentConfig::Object(options) => options.sparkline_length,
+        }
+    }
+
+    pub fn sparkline_update_freq(&self) -> Option<u64> {
+        match self {
+            ComponentConfig::String(_) => None,
+            ComponentConfig::Object(options) => options.sparkline_update_freq,
         }
     }
 }

@@ -21,6 +21,9 @@ This configuration file allows you to customize which components appear in each 
 
 ## Configuration Structure
 
+The configuration supports both simple string components and object-based components with additional options.
+
+### Basic Structure
 ```json
 {
   "bars": {
@@ -41,6 +44,36 @@ This configuration file allows you to customize which components appear in each 
   }
 }
 ```
+
+### Component Objects
+Components can also be configured as objects with additional options:
+
+```json
+{
+  "bars": {
+    "left": ["workspaces"],
+    "middle": ["time", "separator", "weather"],
+    "right": [
+      "temperature",
+      "separator", 
+      {
+        "name": "wifi",
+        "sparkline": true,
+        "sparkline_length": 8,
+        "sparkline_update_freq": 1
+      },
+      "separator",
+      "battery"
+    ]
+  }
+}
+```
+
+#### WiFi Component Options
+- **`name`** (required): Component name, must be "wifi"
+- **`sparkline`** (optional, default: false): Enable sparkline mode to show network usage over time
+- **`sparkline_length`** (optional, default: 10): Length of the sparkline in characters
+- **`sparkline_update_freq`** (optional, default: 2): Update frequency in seconds for the sparkline
 
 ## Customization Examples
 
@@ -73,6 +106,46 @@ This configuration file allows you to customize which components appear in each 
     "left": ["workspaces"],
     "middle": ["time", "separator", "weather"],
     "right": ["wifi", "separator", "separator", "battery"]
+  }
+}
+```
+
+### WiFi with Sparkline
+```json
+{
+  "bars": {
+    "left": ["workspaces"],
+    "middle": ["time", "separator", "weather"],
+    "right": [
+      "separator",
+      {
+        "name": "wifi",
+        "sparkline": true,
+        "sparkline_length": 12,
+        "sparkline_update_freq": 1
+      },
+      "separator",
+      "battery"
+    ]
+  }
+}
+```
+
+### Compact WiFi Sparkline
+```json
+{
+  "bars": {
+    "left": ["workspaces"],
+    "middle": ["time"],
+    "right": [
+      {
+        "name": "wifi",
+        "sparkline": true,
+        "sparkline_length": 6
+      },
+      "separator",
+      "battery"
+    ]
   }
 }
 ```
