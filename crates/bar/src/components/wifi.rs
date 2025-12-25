@@ -15,10 +15,6 @@ pub struct Wifi {
 }
 
 impl Wifi {
-    pub fn new() -> Self {
-        Self::with_config(false, 10, 2)
-    }
-
     pub fn with_config(
         sparkline: bool,
         sparkline_length: usize,

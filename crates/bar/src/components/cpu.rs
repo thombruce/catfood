@@ -14,10 +14,6 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Self {
-        Self::with_config(false, 10, 3)
-    }
-
     pub fn with_config(
         sparkline: bool,
         sparkline_length: usize,
