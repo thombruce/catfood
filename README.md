@@ -1,5 +1,7 @@
 # Catfood =^,^=
 
+![Catfood Bar](assets/catfood-bar.png)
+
 A modular utility suite for system management, built with Rust and Ratatui.
 
 ## Usage

@@ -1,5 +1,7 @@
 # Catfood Bar =^,^=
 
+![Catfood Bar](../../assets/catfood-bar.png)
+
 A customizable system status bar built with Rust and extensible with Lua. Part of the catfood utility suite.
 
 ## Features
