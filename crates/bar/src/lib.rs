@@ -47,14 +47,63 @@ pub fn is_bar_running() -> color_eyre::Result<bool> {
     }
 }
 
-/// Spawn bar executable in a kitten panel
-pub fn spawn_in_panel() {
-    // Find the bar executable
-    let current_exe = std::env::current_exe().unwrap_or_else(|_| "catfood-bar".into());
+/// Find the catfood-bar executable using multiple strategies
+fn find_bar_executable() -> color_eyre::Result<std::path::PathBuf> {
+    // Strategy 1: Try PATH first (works for installed packages)
+    if let Ok(bar_exe) = which::which("catfood-bar") {
+        return Ok(bar_exe);
+    }
+
+    // Strategy 2: Try CARGO_BIN_EXE (works during development with cargo run)
+    if let Ok(path) = std::env::var("CARGO_BIN_EXE_catfood-bar") {
+        let path = std::path::PathBuf::from(path);
+        if path.exists() {
+            return Ok(path);
+        }
+    }
+
+    // Strategy 3: Try relative to current executable (development fallback)
+    let current_exe = std::env::current_exe()?;
     let bar_exe = current_exe
         .parent()
         .unwrap_or(&current_exe)
         .join("catfood-bar");
+
+    if bar_exe.exists() {
+        return Ok(bar_exe);
+    }
+
+    // Strategy 4: Try target directories (development fallback)
+    let current_dir = std::env::current_dir()?;
+    let target_debug = current_dir.join("target/debug/catfood-bar");
+    if target_debug.exists() {
+        return Ok(target_debug);
+    }
+
+    let target_release = current_dir.join("target/release/catfood-bar");
+    if target_release.exists() {
+        return Ok(target_release);
+    }
+
+    Err(color_eyre::eyre::eyre!(
+        "Could not find catfood-bar executable.\n\n\
+         Please install catfood-bar with one of these methods:\n\
+         • cargo install catfood-bar\n\
+         • Download from https://github.com/thombruce/catfood/releases\n\n\
+         Or ensure it's available in your PATH if already installed."
+    ))
+}
+
+/// Spawn bar executable in a kitten panel
+pub fn spawn_in_panel() {
+    // Find the bar executable using robust discovery
+    let bar_exe = match find_bar_executable() {
+        Ok(path) => path,
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     // Use shell to properly detach process
     let shell_cmd = format!("kitten panel {} --no-kitten &", bar_exe.display());

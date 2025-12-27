@@ -23,9 +23,19 @@ kitten panel --edge=bottom catfood bar
 ### Other Commands
 
 ```sh
-catfood bar           # Run the system bar
-catfood menu          # Run the menu system (coming soon)
-catfood notifications # Run notification system (coming soon)
+catfood bar                    # Run the system bar (spawns in kitten panel)
+catfood bar --no-kitten         # Run the system bar directly in current terminal
+catfood menu                   # Run menu system (coming soon)
+catfood notifications             # Run notification system (coming soon)
+```
+
+### Direct Binary Usage
+
+Both `catfood bar` and `catfood-bar` support the same flags:
+
+```sh
+catfood-bar                    # Run in kitten panel (default)
+catfood-bar --no-kitten         # Run directly in current terminal
 ```
 
 ## Installation
@@ -34,11 +44,14 @@ catfood notifications # Run notification system (coming soon)
 
 ```sh
 # Install the complete catfood suite
+cargo install catfood-bar
 cargo install catfood
 
-# Install just the bar component
+# Install just the bar component (standalone)
 cargo install catfood-bar
 ```
+
+**Note**: `catfood bar` requires `catfood-bar` to be installed separately. This allows standalone installation of individual components while maintaining the full suite functionality.
 
 ### From Source
 
