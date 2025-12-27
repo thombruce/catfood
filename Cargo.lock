@@ -197,7 +197,6 @@ dependencies = [
  "catfood-bar",
  "clap",
  "color-eyre",
- "libc",
 ]
 
 [[package]]
@@ -210,6 +209,7 @@ dependencies = [
  "color-eyre",
  "crossterm 0.29.0",
  "lazy_static",
+ "libc",
  "mlua",
  "notify",
  "ratatui",

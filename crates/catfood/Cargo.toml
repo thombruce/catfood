@@ -12,4 +12,3 @@ homepage.workspace = true
 clap = { version = "4.0", features = ["derive"] }
 catfood-bar = { path = "../bar", version = "0.2.0" }
 color-eyre = "0.6.3"
-libc = "0.2"

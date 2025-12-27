@@ -7,20 +7,75 @@ use ratatui::{
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
+use std::process::Command;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
-mod component_manager;
-mod components;
-mod config;
-mod logging;
-mod lua_component;
+pub mod component_manager;
+pub mod components;
+pub mod config;
+pub mod logging;
+pub mod lua_component;
 
-use component_manager::ComponentManager;
-use components::{LeftBar, MiddleBar, RightBar};
+pub use component_manager::ComponentManager;
+pub use components::{LeftBar, MiddleBar, RightBar};
 
-pub fn run() -> color_eyre::Result<()> {
+/// Check if bar is already running by checking PID file
+pub fn is_bar_running() -> color_eyre::Result<bool> {
+    let pid_file_path = get_pid_file_path()?;
+
+    if !pid_file_path.exists() {
+        return Ok(false);
+    }
+
+    let pid_content = fs::read_to_string(&pid_file_path)?;
+    let pid: u32 = pid_content
+        .trim()
+        .parse()
+        .map_err(|_| color_eyre::eyre::eyre!("Invalid PID in PID file"))?;
+
+    // Check if process exists by sending signal 0
+    unsafe {
+        if libc::kill(pid as i32, 0) == 0 {
+            Ok(true) // Process exists and is alive
+        } else {
+            // Process doesn't exist, remove stale PID file
+            let _ = fs::remove_file(&pid_file_path);
+            Ok(false)
+        }
+    }
+}
+
+/// Spawn bar executable in a kitten panel
+pub fn spawn_in_panel() {
+    // Find the bar executable
+    let current_exe = std::env::current_exe().unwrap_or_else(|_| "catfood-bar".into());
+    let bar_exe = current_exe
+        .parent()
+        .unwrap_or(&current_exe)
+        .join("catfood-bar");
+
+    // Use shell to properly detach process
+    let shell_cmd = format!("kitten panel {} --no-kitten &", bar_exe.display());
+
+    match Command::new("sh").arg("-c").arg(&shell_cmd).spawn() {
+        Ok(_child) => {
+            // Give panel a moment to start then exit parent
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            std::process::exit(0);
+        }
+        Err(e) => {
+            eprintln!("Failed to spawn kitten panel: {}", e);
+            eprintln!(
+                "Make sure Kitty is installed and you're running this in a Kitty environment."
+            );
+            std::process::exit(1);
+        }
+    }
+}
+
+pub fn run_bar() -> color_eyre::Result<()> {
     color_eyre::install()?;
 
     // Create PID file at bar startup (not in parent)
