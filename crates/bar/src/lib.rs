@@ -105,12 +105,17 @@ pub fn spawn_in_panel() {
         }
     };
 
-    // Use shell to properly detach process
-    let shell_cmd = format!("kitten panel {} --no-kitten &", bar_exe.display());
-
-    match Command::new("sh").arg("-c").arg(&shell_cmd).spawn() {
+    // Spawn kitten panel directly with proper arguments for security
+    // This avoids shell injection risks from special characters in paths
+    match Command::new("kitten")
+        .arg("panel")
+        .arg(&bar_exe)
+        .arg("--no-kitten") // Required to prevent spawning additional panels
+        .spawn()
+    {
         Ok(_child) => {
             // Give panel a moment to start then exit parent
+            // The child process continues running independently
             std::thread::sleep(std::time::Duration::from_millis(500));
             std::process::exit(0);
         }
