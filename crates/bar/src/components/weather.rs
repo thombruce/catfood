@@ -1,3 +1,4 @@
+use chrono::{Local, Timelike};
 use ratatui::{prelude::Stylize, style::Color, text::Span};
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
@@ -15,6 +16,8 @@ pub struct Weather {
     data: Arc<Mutex<WeatherData>>,
     cached_span_content: Arc<Mutex<String>>,
     last_update: Arc<Mutex<u64>>,
+    day_start: u8,
+    night_start: u8,
     _update_handle: tokio::task::JoinHandle<()>,
 }
 
@@ -42,6 +45,10 @@ impl Default for Weather {
 
 impl Weather {
     pub fn new() -> Self {
+        Self::with_config(6, 18)
+    }
+
+    pub fn with_config(day_start: u8, night_start: u8) -> Self {
         let data = Arc::new(Mutex::new(WeatherData {
             temperature: "--".to_string(),
             condition: "Unknown".to_string(),
@@ -55,6 +62,8 @@ impl Weather {
         let last_update_clone = last_update.clone();
 
         // Spawn background task for weather updates
+        let day_start_clone = day_start;
+        let night_start_clone = night_start;
         let update_handle = tokio::spawn(async move {
             let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(600)); // 10 minutes
 
@@ -67,10 +76,16 @@ impl Weather {
                         .unwrap()
                         .as_secs();
 
+                    // Determine if it's nighttime for icon selection
+                    let hour = Local::now().hour();
+                    let is_nighttime =
+                        hour < day_start_clone as u32 || hour >= night_start_clone as u32;
+
                     if let Ok(mut data_guard) = data_clone.lock() {
                         data_guard.temperature = format!("{:.0}", weather_data.main.temp);
                         data_guard.condition = weather_data.weather[0].main.clone();
-                        data_guard.icon = Self::get_weather_icon(&data_guard.condition);
+                        data_guard.icon =
+                            Self::get_weather_icon(&data_guard.condition, is_nighttime);
 
                         // Update cached span content
                         let new_content =
@@ -91,6 +106,8 @@ impl Weather {
             data,
             cached_span_content,
             last_update,
+            day_start,
+            night_start,
             _update_handle: update_handle,
         }
     }
@@ -111,6 +128,8 @@ impl Weather {
             let cached_span_content_clone = self.cached_span_content.clone();
             let last_update_clone = self.last_update.clone();
 
+            let day_start_clone = self.day_start;
+            let night_start_clone = self.night_start;
             tokio::spawn(async move {
                 if let Ok(weather_data) = Self::fetch_weather_async().await {
                     let now = SystemTime::now()
@@ -118,10 +137,16 @@ impl Weather {
                         .unwrap()
                         .as_secs();
 
+                    // Determine if it's nighttime for icon selection
+                    let hour = Local::now().hour();
+                    let is_nighttime =
+                        hour < day_start_clone as u32 || hour >= night_start_clone as u32;
+
                     if let Ok(mut data_guard) = data_clone.lock() {
                         data_guard.temperature = format!("{:.0}", weather_data.main.temp);
                         data_guard.condition = weather_data.weather[0].main.clone();
-                        data_guard.icon = Self::get_weather_icon(&data_guard.condition);
+                        data_guard.icon =
+                            Self::get_weather_icon(&data_guard.condition, is_nighttime);
 
                         // Update cached span content
                         let new_content =
@@ -146,6 +171,11 @@ impl Weather {
             .clone()
     }
 
+    fn is_nighttime(&self) -> bool {
+        let hour = chrono::Local::now().hour();
+        hour < self.day_start as u32 || hour >= self.night_start as u32
+    }
+
     pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
         let cached_content = if let Ok(guard) = self.cached_span_content.lock() {
             guard.clone()
@@ -156,10 +186,15 @@ impl Weather {
         let span = Span::raw(cached_content);
         if colorize {
             let data = self.get_weather_data();
+            let is_nighttime = self.is_nighttime();
             let color = {
                 let condition_lower = data.condition.to_lowercase();
                 if condition_lower.contains("clear") || condition_lower.contains("sunny") {
-                    Color::Yellow // Clear/Sunny: Yellow
+                    if is_nighttime {
+                        Color::LightCyan // Clear night: Light cyan (moon-like color)
+                    } else {
+                        Color::Yellow // Clear day: Yellow (sun)
+                    }
                 } else if condition_lower.contains("cloud") || condition_lower.contains("overcast")
                 {
                     Color::Gray // Cloudy/Overcast: Gray
@@ -213,10 +248,16 @@ impl Weather {
         Err(color_eyre::eyre::eyre!("Failed to parse weather data"))
     }
 
-    fn get_weather_icon(condition: &str) -> String {
+    fn get_weather_icon(condition: &str, is_nighttime: bool) -> String {
         let condition_lower = condition.to_lowercase();
         match condition_lower.as_str() {
-            cond if cond.contains("clear") || cond.contains("sunny") => "󰖙".to_string(),
+            cond if cond.contains("clear") || cond.contains("sunny") => {
+                if is_nighttime {
+                    "󰖔".to_string() // Moon icon for clear night
+                } else {
+                    "󰖙".to_string() // Sun icon for clear day
+                }
+            }
             cond if cond.contains("cloud") || cond.contains("overcast") => "󰖐".to_string(),
             cond if cond.contains("rain") || cond.contains("drizzle") => "󰖗".to_string(),
             cond if cond.contains("snow") || cond.contains("sleet") => "󰖘".to_string(),

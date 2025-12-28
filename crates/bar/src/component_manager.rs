@@ -40,7 +40,10 @@ impl Component {
                 config.day_start,
                 config.night_start,
             ))),
-            "weather" => Ok(Component::Weather(Weather::new())),
+            "weather" => Ok(Component::Weather(Weather::with_config(
+                config.day_start,
+                config.night_start,
+            ))),
             "temperature" => Ok(Component::Temperature(Temperature::new())),
             "cpu" => {
                 let sparkline = component_config.sparkline().unwrap_or(false);
