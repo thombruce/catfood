@@ -24,6 +24,10 @@ pub struct ComponentOptions {
 pub struct Config {
     pub bars: BarsConfig,
     pub colorize: bool,
+    #[serde(default = "default_day_start")]
+    pub day_start: u8,
+    #[serde(default = "default_night_start")]
+    pub night_start: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,6 +35,14 @@ pub struct BarsConfig {
     pub left: Vec<ComponentConfig>,
     pub middle: Vec<ComponentConfig>,
     pub right: Vec<ComponentConfig>,
+}
+
+fn default_day_start() -> u8 {
+    6
+}
+
+fn default_night_start() -> u8 {
+    18
 }
 
 impl Default for Config {
@@ -63,6 +75,8 @@ impl Default for Config {
                 ],
             },
             colorize: true,
+            day_start: default_day_start(),
+            night_start: default_night_start(),
         }
     }
 }

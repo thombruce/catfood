@@ -1,18 +1,32 @@
 use chrono::{Local, Timelike};
 use ratatui::{prelude::Stylize, style::Color, text::Span};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Time {
     pub time_string: String,
     pub cached_span_content: String,
+    day_start: u8,
+    night_start: u8,
+}
+
+impl Default for Time {
+    fn default() -> Self {
+        Self::with_config(6, 18)
+    }
 }
 
 impl Time {
     pub fn new() -> Self {
+        Self::with_config(6, 18)
+    }
+
+    pub fn with_config(day_start: u8, night_start: u8) -> Self {
         let time_string = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
         Self {
             time_string: time_string.clone(),
             cached_span_content: time_string,
+            day_start,
+            night_start,
         }
     }
 
@@ -25,10 +39,10 @@ impl Time {
         let span = Span::raw(&self.cached_span_content);
         if colorize {
             let hour = Local::now().hour();
-            let color = if (6..18).contains(&hour) {
-                Color::Yellow // Daytime (6:00 - 17:59): Yellow
+            let color = if hour >= self.day_start as u32 && hour < self.night_start as u32 {
+                Color::Yellow // Daytime: Yellow
             } else {
-                Color::Magenta // Nighttime (18:00 - 5:59): Purple
+                Color::Magenta // Nighttime: Purple
             };
             vec![span.fg(color)]
         } else {

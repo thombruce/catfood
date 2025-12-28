@@ -30,12 +30,16 @@ impl Component {
     pub fn new(
         component_config: &ComponentConfig,
         lua_registry: Option<&LuaComponentRegistry>,
+        config: &Config,
     ) -> color_eyre::Result<Self> {
         let component_type = component_config.name();
         match component_type {
             "workspaces" => Ok(Component::Workspaces(Workspaces::new())),
             "windows" => Ok(Component::Windows(Windows::new())),
-            "time" => Ok(Component::Time(Time::new())),
+            "time" => Ok(Component::Time(Time::with_config(
+                config.day_start,
+                config.night_start,
+            ))),
             "weather" => Ok(Component::Weather(Weather::new())),
             "temperature" => Ok(Component::Temperature(Temperature::new())),
             "cpu" => {
@@ -223,20 +227,20 @@ impl ComponentManager {
 
         // Create all components (unknown ones become error icons)
         for component_config in &config.bars.left {
-            let component = Component::new(component_config, Some(&lua_registry))?;
+            let component = Component::new(component_config, Some(&lua_registry), &config)?;
             components.insert(component_config.name().to_string(), component);
         }
 
         for component_config in &config.bars.middle {
             if !components.contains_key(component_config.name()) {
-                let component = Component::new(component_config, Some(&lua_registry))?;
+                let component = Component::new(component_config, Some(&lua_registry), &config)?;
                 components.insert(component_config.name().to_string(), component);
             }
         }
 
         for component_config in &config.bars.right {
             if !components.contains_key(component_config.name()) {
-                let component = Component::new(component_config, Some(&lua_registry))?;
+                let component = Component::new(component_config, Some(&lua_registry), &config)?;
                 components.insert(component_config.name().to_string(), component);
             }
         }
@@ -289,20 +293,23 @@ impl ComponentManager {
 
         // Create all components (unknown ones become error icons)
         for component_config in &new_config.bars.left {
-            let component = Component::new(component_config, Some(&self.lua_registry))?;
+            let component =
+                Component::new(component_config, Some(&self.lua_registry), &new_config)?;
             components.insert(component_config.name().to_string(), component);
         }
 
         for component_config in &new_config.bars.middle {
             if !components.contains_key(component_config.name()) {
-                let component = Component::new(component_config, Some(&self.lua_registry))?;
+                let component =
+                    Component::new(component_config, Some(&self.lua_registry), &new_config)?;
                 components.insert(component_config.name().to_string(), component);
             }
         }
 
         for component_config in &new_config.bars.right {
             if !components.contains_key(component_config.name()) {
-                let component = Component::new(component_config, Some(&self.lua_registry))?;
+                let component =
+                    Component::new(component_config, Some(&self.lua_registry), &new_config)?;
                 components.insert(component_config.name().to_string(), component);
             }
         }
