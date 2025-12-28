@@ -1,3 +1,4 @@
+use crate::time_utils;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +25,10 @@ pub struct ComponentOptions {
 pub struct Config {
     pub bars: BarsConfig,
     pub colorize: bool,
+    #[serde(default = "time_utils::default_day_start")]
+    pub day_start: u8,
+    #[serde(default = "time_utils::default_night_start")]
+    pub night_start: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,6 +68,8 @@ impl Default for Config {
                 ],
             },
             colorize: true,
+            day_start: time_utils::default_day_start(),
+            night_start: time_utils::default_night_start(),
         }
     }
 }

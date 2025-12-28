@@ -17,6 +17,7 @@ pub mod components;
 pub mod config;
 pub mod logging;
 pub mod lua_component;
+pub mod time_utils;
 
 pub use component_manager::ComponentManager;
 pub use components::{LeftBar, MiddleBar, RightBar};
