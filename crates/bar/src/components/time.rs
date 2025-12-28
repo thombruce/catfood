@@ -1,4 +1,5 @@
-use chrono::{Local, Timelike};
+use crate::time_utils;
+use chrono::Local;
 use ratatui::{prelude::Stylize, style::Color, text::Span};
 
 #[derive(Debug, Clone)]
@@ -11,13 +12,19 @@ pub struct Time {
 
 impl Default for Time {
     fn default() -> Self {
-        Self::with_config(6, 18)
+        Self::with_config(
+            time_utils::default_day_start(),
+            time_utils::default_night_start(),
+        )
     }
 }
 
 impl Time {
     pub fn new() -> Self {
-        Self::with_config(6, 18)
+        Self::with_config(
+            time_utils::default_day_start(),
+            time_utils::default_night_start(),
+        )
     }
 
     pub fn with_config(day_start: u8, night_start: u8) -> Self {
@@ -38,12 +45,12 @@ impl Time {
     pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
         let span = Span::raw(&self.cached_span_content);
         if colorize {
-            let hour = Local::now().hour();
-            let color = if hour >= self.day_start as u32 && hour < self.night_start as u32 {
-                Color::Yellow // Daytime: Yellow
-            } else {
-                Color::Magenta // Nighttime: Purple
-            };
+            let color = time_utils::get_time_based_color(
+                Color::Yellow,  // Daytime: Yellow
+                Color::Magenta, // Nighttime: Purple
+                self.day_start,
+                self.night_start,
+            );
             vec![span.fg(color)]
         } else {
             vec![span]

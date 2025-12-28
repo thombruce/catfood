@@ -1,4 +1,4 @@
-use chrono::{Local, Timelike};
+use crate::time_utils;
 use ratatui::{prelude::Stylize, style::Color, text::Span};
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
@@ -45,7 +45,10 @@ impl Default for Weather {
 
 impl Weather {
     pub fn new() -> Self {
-        Self::with_config(6, 18)
+        Self::with_config(
+            time_utils::default_day_start(),
+            time_utils::default_night_start(),
+        )
     }
 
     pub fn with_config(day_start: u8, night_start: u8) -> Self {
@@ -77,9 +80,7 @@ impl Weather {
                         .as_secs();
 
                     // Determine if it's nighttime for icon selection
-                    let hour = Local::now().hour();
-                    let is_nighttime =
-                        hour < day_start_clone as u32 || hour >= night_start_clone as u32;
+                    let is_nighttime = time_utils::is_nighttime(day_start_clone, night_start_clone);
 
                     if let Ok(mut data_guard) = data_clone.lock() {
                         data_guard.temperature = format!("{:.0}", weather_data.main.temp);
@@ -138,9 +139,7 @@ impl Weather {
                         .as_secs();
 
                     // Determine if it's nighttime for icon selection
-                    let hour = Local::now().hour();
-                    let is_nighttime =
-                        hour < day_start_clone as u32 || hour >= night_start_clone as u32;
+                    let is_nighttime = time_utils::is_nighttime(day_start_clone, night_start_clone);
 
                     if let Ok(mut data_guard) = data_clone.lock() {
                         data_guard.temperature = format!("{:.0}", weather_data.main.temp);
@@ -171,11 +170,6 @@ impl Weather {
             .clone()
     }
 
-    fn is_nighttime(&self) -> bool {
-        let hour = chrono::Local::now().hour();
-        hour < self.day_start as u32 || hour >= self.night_start as u32
-    }
-
     pub fn render_as_spans(&self, colorize: bool) -> Vec<Span<'_>> {
         let cached_content = if let Ok(guard) = self.cached_span_content.lock() {
             guard.clone()
@@ -186,15 +180,15 @@ impl Weather {
         let span = Span::raw(cached_content);
         if colorize {
             let data = self.get_weather_data();
-            let is_nighttime = self.is_nighttime();
             let color = {
                 let condition_lower = data.condition.to_lowercase();
                 if condition_lower.contains("clear") || condition_lower.contains("sunny") {
-                    if is_nighttime {
-                        Color::LightCyan // Clear night: Light cyan (moon-like color)
-                    } else {
-                        Color::Yellow // Clear day: Yellow (sun)
-                    }
+                    time_utils::get_time_based_color(
+                        Color::Yellow,    // Clear day: Yellow (sun)
+                        Color::LightCyan, // Clear night: Light cyan (moon-like color)
+                        self.day_start,
+                        self.night_start,
+                    )
                 } else if condition_lower.contains("cloud") || condition_lower.contains("overcast")
                 {
                     Color::Gray // Cloudy/Overcast: Gray
