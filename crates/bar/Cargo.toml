@@ -25,4 +25,4 @@ lazy_static = "1.4"
 mlua = { version = "0.11", features = ["lua54", "vendored"] }
 clap = { version = "4.0", features = ["derive"] }
 libc = "0.2"
-which = "6.0"
+which = "8.0"
