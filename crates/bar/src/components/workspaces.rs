@@ -89,7 +89,9 @@ fn get_workspaces() -> Option<Vec<String>> {
         let json: Vec<Workspace> =
             serde_json::from_str(stdout).expect("failed to parse workspaces");
 
-        return Some(json.iter().map(|j| j.id.clone().to_string()).collect());
+        let mut workspaces: Vec<String> = json.iter().map(|j| j.id.to_string()).collect();
+        workspaces.sort_by_key(|w| w.parse::<i32>().unwrap_or(0));
+        return Some(workspaces);
     } else {
         logging::log_component_error(
             "WORKSPACES",

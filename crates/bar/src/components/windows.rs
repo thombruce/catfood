@@ -28,6 +28,7 @@ pub struct WindowInfo {
     icon: String,
     class: String,
     title: String,
+    workspace_id: i32,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -114,7 +115,7 @@ fn get_windows() -> Option<(Vec<WindowInfo>, String)> {
         String::new()
     };
 
-    let window_infos = windows
+    let mut window_infos: Vec<WindowInfo> = windows
         .iter()
         .filter(|w| w.workspace.id > 0) // Filter out special workspaces
         .map(|w| WindowInfo {
@@ -122,8 +123,14 @@ fn get_windows() -> Option<(Vec<WindowInfo>, String)> {
             icon: get_app_icon(&w.class, &w.title),
             class: w.class.clone(),
             title: w.title.clone(),
+            workspace_id: w.workspace.id,
         })
         .collect();
+
+    // Sort by workspace ID first, then by some deterministic order within each workspace
+    window_infos.sort_by_key(|w| (w.workspace_id, w.address.clone()));
+
+    let window_infos = window_infos;
 
     Some((window_infos, active_address))
 }
