@@ -142,6 +142,93 @@ fn get_tab_icon(title: &str) -> String {
         return "󰈁".to_string();
     } else if title_lower.contains("edit") || title_lower.contains("vi") {
         return "".to_string();
+    } else if title_lower.starts_with("opencode")
+        || title_lower.contains("opencode")
+        || title_lower.starts_with("oc |")
+    {
+        return "󰚩".to_string();
+    } else if title_lower.starts_with("lazygit") || title_lower.starts_with("gitui") {
+        return "󰊢".to_string();
+    } else if title_lower.starts_with("bat")
+        || title_lower.starts_with("less")
+        || title_lower.starts_with("more")
+    {
+        return "󰈚".to_string();
+    } else if title_lower.starts_with("exa")
+        || title_lower.starts_with("lsd")
+        || title_lower.starts_with("tree")
+    {
+        return "󰉋".to_string();
+    } else if title_lower.starts_with("fd")
+        || title_lower.starts_with("find")
+        || title_lower.starts_with("rg")
+        || title_lower.starts_with("grep")
+        || title_lower.starts_with("ag")
+    {
+        return "󰍉".to_string();
+    } else if title_lower.starts_with("k9s") || title_lower.starts_with("kubectl") {
+        return "󱃾".to_string();
+    } else if title_lower.starts_with("terraform") || title_lower.starts_with("tf") {
+        return "󱁢".to_string();
+    } else if title_lower.starts_with("ansible") || title_lower.starts_with("ansible-playbook") {
+        return "󰔚".to_string();
+    } else if title_lower.starts_with("tmux") || title_lower.starts_with("screen") {
+        return "󰆍".to_string();
+    } else if title_lower.starts_with("weechat") || title_lower.starts_with("irssi") {
+        return "󰒱".to_string();
+    } else if title_lower.starts_with("neomutt") || title_lower.starts_with("mutt") {
+        return "󰇰".to_string();
+    } else if title_lower.starts_with("newsboat") || title_lower.starts_with("nnn") {
+        return "󰎕".to_string();
+    } else if title_lower.starts_with("ncdu") || title_lower.starts_with("du") {
+        return "󰉋".to_string();
+    } else if title_lower.starts_with("glow") || title_lower.starts_with("mdcat") {
+        return "󰍹".to_string();
+    } else if title_lower.starts_with("tig") || title_lower.starts_with("lazydocker") {
+        return "󰊢".to_string();
+    } else if title_lower.starts_with("fzf")
+        || title_lower.starts_with("peco")
+        || title_lower.starts_with("ripgrep-all")
+        || title_lower.starts_with("rga")
+    {
+        return "󰍉".to_string();
+    } else if title_lower.starts_with("jq") || title_lower.starts_with("yq") {
+        return "󰉼".to_string();
+    } else if title_lower.starts_with("bottom") || title_lower.starts_with("glances") {
+        return "󰔚".to_string();
+    } else if title_lower.starts_with("nmap") || title_lower.starts_with("netstat") {
+        return "󰈁".to_string();
+    } else if title_lower.starts_with("hugo") || title_lower.starts_with("jekyll") {
+        return "󰀶".to_string();
+    } else if title_lower.starts_with("pip") || title_lower.starts_with("poetry") {
+        return "󰌠".to_string();
+    } else if title_lower.starts_with("deno") || title_lower.starts_with("bun") {
+        return "󰎙".to_string();
+    } else if title_lower.starts_with("zig") || title_lower.starts_with("nim") {
+        return "󱘗".to_string();
+    } else if title_lower.starts_with("make") || title_lower.starts_with("cmake") {
+        return "󰔧".to_string();
+    } else if title_lower.starts_with("gdb") || title_lower.starts_with("lldb") {
+        return "󰃤".to_string();
+    } else if title_lower.starts_with("strace")
+        || title_lower.starts_with("ltrace")
+        || title_lower.starts_with("valgrind")
+    {
+        return "󰔚".to_string();
+    } else if title_lower.starts_with("wireshark") || title_lower.starts_with("tshark") {
+        return "󰈁".to_string();
+    } else if title_lower.starts_with("sqlite3")
+        || title_lower.starts_with("mysql")
+        || title_lower.starts_with("redis-cli")
+        || title_lower.starts_with("psql")
+    {
+        return "󰆼".to_string();
+    } else if title_lower.starts_with("gh") || title_lower.starts_with("hub") {
+        return "󰊢".to_string();
+    } else if title_lower.starts_with("alacritty") || title_lower.starts_with("foot") {
+        return "󰆍".to_string();
+    } else if title_lower.starts_with("nvim-qt") || title_lower.starts_with("gvim") {
+        return "".to_string();
     }
 
     // Default shell/terminal icon
@@ -317,6 +404,11 @@ mod tests {
         assert_eq!(get_tab_icon("nvim config"), "");
         assert_eq!(get_tab_icon("vim /etc/fstab"), "");
         assert_eq!(get_tab_icon("htop"), "󰔚");
+        assert_eq!(get_tab_icon("opencode help"), "🤖");
+        assert_eq!(get_tab_icon("lazygit"), "󰊢");
+        assert_eq!(get_tab_icon("bat README.md"), "󰈚");
+        assert_eq!(get_tab_icon("k9s"), "☸️");
+        assert_eq!(get_tab_icon("fzf"), "󰍉");
         assert_eq!(get_tab_icon("random command"), "󰆍"); // default shell icon
     }
 }
