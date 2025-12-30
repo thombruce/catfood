@@ -82,7 +82,7 @@ All errors are logged to `~/.local/share/catfood/logs/bar.log` in ISO format:
 
 The log file keeps only the last 1000 lines.
 
-See [CONFIG_EXAMPLE.md](CONFIG_EXAMPLE.md) for detailed configuration options and examples.
+See the [catfood-bar README](crates/bar/README.md) for detailed configuration options and examples.
 
 ## Release Process
 
