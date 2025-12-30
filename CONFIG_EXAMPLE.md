@@ -7,6 +7,8 @@ This configuration file allows you to customize which components appear in each 
 
 ## Available Components
 - `workspaces` - Hyprland workspaces
+- `windows` - Application windows with icons
+- `kitty_tabs` - Kitty terminal tabs (requires `--single-instance` flag)
 - `time` - Current date and time
 - `weather` - Weather information
 - `temperature` - CPU temperature
@@ -20,6 +22,13 @@ This configuration file allows you to customize which components appear in each 
 - `space` - Single space character (" ") for fine-tuned spacing
 
 **Sparkline Support**: The `cpu`, `ram`, and `wifi` components support sparkline mode to visualize usage patterns over time. See the configuration examples below for details.
+
+**KittyTabs Component Requirements**: The `kitty_tabs` component requires Kitty terminal instances to be started with the `--single-instance` flag for proper detection. This allows the component to identify and communicate with individual Kitty processes via their UNIX sockets.
+
+```sh
+# Launch Kitty with single instance for kitty_tabs support
+kitty --single-instance
+```
 
 ## Configuration Structure
 
@@ -114,6 +123,17 @@ For any sparkline-enabled component:
     "left": ["workspaces"],
     "middle": ["time", "separator", "weather"],
     "right": ["wifi", "separator", "separator", "battery"]
+  }
+}
+```
+
+### Terminal Workflow Focus
+```json
+{
+  "bars": {
+    "left": ["workspaces", "separator", "kitty_tabs"],
+    "middle": ["time"],
+    "right": ["wifi", "separator", "battery"]
   }
 }
 ```
