@@ -92,6 +92,8 @@ impl KittyTabs {
 
 fn truncate_title(title: &str, is_active: bool) -> String {
     // NOTE: This might be redundant given that we always get_tab_icon for non-active tabs below.
+    // TODO: Make these truncation lengths configurable constants instead of magic numbers
+    // Allow users to customize max title lengths via configuration
     let max_len = if is_active { 16 } else { 12 }; // Account for icon in active tabs
     if title.len() > max_len {
         format!("{}...", &title[..max_len - 3])
@@ -100,6 +102,9 @@ fn truncate_title(title: &str, is_active: bool) -> String {
     }
 }
 
+// TODO: Refactor this large match statement to use a data-driven approach
+// Consider extracting to a HashMap lookup or creating separate modules by category
+// This would improve maintainability and make adding new applications easier
 fn get_tab_color(title: &str) -> (Color, Color) {
     let title_lower = title.to_lowercase();
 
@@ -189,6 +194,9 @@ fn get_tab_color(title: &str) -> (Color, Color) {
     (Color::Rgb(103, 117, 140), Color::White) // Kitty Gray
 }
 
+// TODO: Refactor this large match statement to use a HashMap or macro approach
+// Consider separating into different modules by category (editors, tools, etc.)
+// This 130+ line function is difficult to maintain and extend
 fn get_tab_icon(title: &str) -> String {
     let title_lower = title.to_lowercase();
 
@@ -331,6 +339,8 @@ fn get_tab_icon(title: &str) -> String {
     "󰆍".to_string()
 }
 
+// TODO: Consider caching the Kitty PID for short periods to reduce hyprctl calls
+// This would improve performance by avoiding repeated system calls during update cycles
 fn get_focused_kitty_pid() -> Option<u32> {
     let active_output = Command::new("hyprctl")
         .args(["activewindow", "-j"])
@@ -388,6 +398,8 @@ fn is_single_instance_kitty(pid: u32) -> bool {
     false
 }
 
+// TODO: This function appears redundant - consider removing and using get_kitty_tabs_for_pid directly
+// The socket_path parameter makes this wrapper unnecessary
 fn get_kitty_tabs(socket_path: Option<&str>) -> Option<Vec<TabInfo>> {
     if let Some(pid) = get_focused_kitty_pid() {
         get_kitty_tabs_for_pid(pid, socket_path)
