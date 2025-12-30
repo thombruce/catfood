@@ -32,20 +32,26 @@ pub struct TabInfo {
 pub struct KittyTabs {
     pub tabs: Vec<TabInfo>,
     kitty_pid: Option<u32>,
+    socket_path: Option<String>,
 }
 
 impl KittyTabs {
     pub fn new() -> Self {
+        Self::with_config(None)
+    }
+
+    pub fn with_config(socket_path: Option<String>) -> Self {
         Self {
-            tabs: get_kitty_tabs().unwrap_or_default(),
+            tabs: get_kitty_tabs(socket_path.as_deref()).unwrap_or_default(),
             kitty_pid: get_focused_kitty_pid(),
+            socket_path,
         }
     }
 
     pub fn update(&mut self) {
         self.kitty_pid = get_focused_kitty_pid();
         self.tabs = if let Some(pid) = self.kitty_pid {
-            get_kitty_tabs_for_pid(pid).unwrap_or_default()
+            get_kitty_tabs_for_pid(pid, self.socket_path.as_deref()).unwrap_or_default()
         } else {
             Vec::new()
         };
@@ -382,19 +388,22 @@ fn is_single_instance_kitty(pid: u32) -> bool {
     false
 }
 
-fn get_kitty_tabs() -> Option<Vec<TabInfo>> {
+fn get_kitty_tabs(socket_path: Option<&str>) -> Option<Vec<TabInfo>> {
     if let Some(pid) = get_focused_kitty_pid() {
-        get_kitty_tabs_for_pid(pid)
+        get_kitty_tabs_for_pid(pid, socket_path)
     } else {
         None
     }
 }
 
-fn get_kitty_tabs_for_pid(pid: u32) -> Option<Vec<TabInfo>> {
-    let socket_path = format!("/tmp/kitty-{}", pid);
+fn get_kitty_tabs_for_pid(pid: u32, socket_path: Option<&str>) -> Option<Vec<TabInfo>> {
+    let socket_path_str = match socket_path {
+        Some(path) => path.to_string(),
+        None => format!("/tmp/kitty-{}", pid),
+    };
 
     let output = Command::new("kitty")
-        .args(["@", "--to", &format!("unix:{}", socket_path), "ls"])
+        .args(["@", "--to", &format!("unix:{}", socket_path_str), "ls"])
         .output()
         .ok()?;
 
@@ -440,12 +449,24 @@ mod tests {
     fn test_kitty_tabs_new() {
         let kitty_tabs = KittyTabs::new();
         assert!(kitty_tabs.kitty_pid.is_none() || kitty_tabs.kitty_pid.is_some());
+        assert!(kitty_tabs.socket_path.is_none());
+    }
+
+    #[test]
+    fn test_kitty_tabs_with_config() {
+        let socket_path = Some("/tmp/custom-kitty".to_string());
+        let kitty_tabs = KittyTabs::with_config(socket_path.clone());
+        assert!(kitty_tabs.kitty_pid.is_none() || kitty_tabs.kitty_pid.is_some());
+        assert_eq!(kitty_tabs.socket_path, socket_path);
     }
 
     #[test]
     fn test_kitty_tabs_update() {
         let mut kitty_tabs = KittyTabs::new();
         kitty_tabs.update();
+
+        let mut kitty_tabs_with_config = KittyTabs::with_config(Some("/tmp/test".to_string()));
+        kitty_tabs_with_config.update();
     }
 
     #[test]
@@ -453,6 +474,7 @@ mod tests {
         let kitty_tabs = KittyTabs {
             tabs: vec![],
             kitty_pid: None,
+            socket_path: None,
         };
         let spans = kitty_tabs.render_as_spans(true);
         assert_eq!(spans.len(), 0);
@@ -472,6 +494,7 @@ mod tests {
                 },
             ],
             kitty_pid: Some(12345),
+            socket_path: None,
         };
         let spans = kitty_tabs.render_as_spans(true);
         assert_eq!(spans.len(), 2);
@@ -515,6 +538,7 @@ mod tests {
                 is_active: true,
             }],
             kitty_pid: Some(12345),
+            socket_path: None,
         };
         let spans = kitty_tabs.render_as_spans(true);
         assert_eq!(spans.len(), 1);

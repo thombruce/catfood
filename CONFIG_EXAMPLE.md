@@ -12,6 +12,7 @@ This configuration file allows you to customize which components appear in each 
   - Active tab: Shows full tab title (up to 20 chars)
   - Inactive tabs: Shows program icons only for compact display
   - Supports nvim, vim, htop, btop, git, ssh, cargo, and more
+  - Supports custom socket path configuration for non-standard Kitty installations
 - `time` - Current date and time
 - `weather` - Weather information
 - `temperature` - CPU temperature
@@ -165,6 +166,32 @@ This keeps the bar concise while still showing what's important at a glance.
       "separator",
       "battery"
     ]
+  }
+}
+```
+
+### Kitty Tabs with Custom Socket Path
+If your Kitty installation uses a non-standard socket path, you can configure it:
+```json
+{
+  "bars": {
+    "left": ["workspaces", "separator", "kitty_tabs"],
+    "middle": ["time"],
+    "right": ["wifi", "separator", "battery"]
+  }
+}
+```
+
+Or with custom socket path:
+```json
+{
+  "bars": {
+    "left": ["workspaces", "separator", {
+      "name": "kitty_tabs",
+      "socket_path": "/tmp/custom-kitty-socket"
+    }],
+    "middle": ["time"],
+    "right": ["wifi", "separator", "battery"]
   }
 }
 ```

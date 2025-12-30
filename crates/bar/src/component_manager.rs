@@ -37,7 +37,10 @@ impl Component {
         match component_type {
             "workspaces" => Ok(Component::Workspaces(Workspaces::new())),
             "windows" => Ok(Component::Windows(Windows::new())),
-            "kitty_tabs" => Ok(Component::KittyTabs(KittyTabs::new())),
+            "kitty_tabs" => {
+                let socket_path = component_config.socket_path();
+                Ok(Component::KittyTabs(KittyTabs::with_config(socket_path)))
+            }
             "time" => Ok(Component::Time(Time::with_config(
                 config.day_start,
                 config.night_start,
