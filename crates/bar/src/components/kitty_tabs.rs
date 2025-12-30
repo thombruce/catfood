@@ -65,9 +65,8 @@ impl KittyTabs {
                     let title = truncate_title(&tab.title, true);
                     let content = format!(" {} {} ", icon, title);
                     if colorize {
-                        Span::raw(content)
-                            .bg(Color::Rgb(103, 117, 140)) // Kitty gray background
-                            .fg(Color::White)
+                        let (bg_color, fg_color) = get_tab_color(&tab.title);
+                        Span::raw(content).bg(bg_color).fg(fg_color)
                     } else {
                         Span::raw(content).bg(Color::White).fg(Color::Black)
                     }
@@ -93,6 +92,95 @@ fn truncate_title(title: &str, is_active: bool) -> String {
     } else {
         title.to_string()
     }
+}
+
+fn get_tab_color(title: &str) -> (Color, Color) {
+    let title_lower = title.to_lowercase();
+
+    // Terminal-based applications - use title
+    if title_lower.starts_with("nvim") || title_lower.contains("neovim") {
+        return (Color::Rgb(0, 107, 84), Color::White); // Neovim Green
+    } else if title_lower.starts_with("vim") {
+        return (Color::Rgb(19, 134, 71), Color::White); // Vim Green
+    } else if title_lower.starts_with("emacs") {
+        return (Color::Rgb(146, 35, 127), Color::White); // Emacs Purple
+    } else if title_lower.starts_with("htop") || title_lower.starts_with("btop") {
+        return (Color::Rgb(255, 152, 0), Color::Black); // System Monitor Orange
+    } else if title_lower.starts_with("yazi") {
+        return (Color::Rgb(255, 200, 87), Color::Black); // Yazi Yellow
+    } else if title_lower.starts_with("ranger") || title_lower.starts_with("lf") {
+        return (Color::Rgb(41, 128, 185), Color::White); // File Manager Blue
+    } else if title_lower.starts_with("git") {
+        return (Color::Rgb(240, 80, 50), Color::White); // Git Orange
+    } else if title_lower.starts_with("ssh") {
+        return (Color::Rgb(0, 100, 200), Color::White); // SSH Blue
+    } else if title_lower.starts_with("cmus") || title_lower.starts_with("ncmpcpp") {
+        return (Color::Rgb(29, 185, 84), Color::White); // Music Green
+    } else if title_lower.starts_with("docker") {
+        return (Color::Rgb(41, 128, 185), Color::White); // Docker Blue
+    } else if title_lower.starts_with("node") || title_lower.starts_with("npm") {
+        return (Color::Rgb(102, 77, 255), Color::White); // Node.js Green
+    } else if title_lower.starts_with("python") || title_lower.starts_with("python3") {
+        return (Color::Rgb(53, 114, 165), Color::White); // Python Blue
+    } else if title_lower.starts_with("rustc") || title_lower.contains("cargo") {
+        return (Color::Rgb(222, 76, 65), Color::White); // Rust Orange
+    } else if title_lower.starts_with("go") {
+        return (Color::Rgb(0, 173, 216), Color::Black); // Go Cyan
+    } else if title_lower.starts_with("java") {
+        return (Color::Rgb(255, 87, 34), Color::White); // Java Orange
+    } else if title_lower.starts_with("k9s") || title_lower.starts_with("kubectl") {
+        return (Color::Rgb(61, 90, 254), Color::White); // Kubernetes Blue
+    } else if title_lower.starts_with("terraform") || title_lower.starts_with("tf") {
+        return (Color::Rgb(94, 103, 110), Color::White); // Terraform Gray
+    } else if title_lower.starts_with("lazygit") || title_lower.starts_with("gitui") {
+        return (Color::Rgb(240, 80, 50), Color::White); // Git UI Orange
+    } else if title_lower.starts_with("tmux") || title_lower.starts_with("screen") {
+        return (Color::Rgb(46, 52, 64), Color::White); // Terminal Multiplexer Dark
+    } else if title_lower.starts_with("weechat") || title_lower.starts_with("irssi") {
+        return (Color::Rgb(254, 0, 84), Color::White); // IRC Red
+    } else if title_lower.starts_with("neomutt") || title_lower.starts_with("mutt") {
+        return (Color::Rgb(0, 112, 193), Color::White); // Email Blue
+    } else if title_lower.starts_with("newsboat") || title_lower.starts_with("nnn") {
+        return (Color::Rgb(255, 193, 7), Color::Black); // News Yellow
+    } else if title_lower.starts_with("glow") || title_lower.starts_with("mdcat") {
+        return (Color::Rgb(33, 150, 243), Color::White); // Markdown Blue
+    } else if title_lower.starts_with("tig") || title_lower.starts_with("lazydocker") {
+        return (Color::Rgb(240, 80, 50), Color::White); // Git TUI Orange
+    } else if title_lower.starts_with("jq") || title_lower.starts_with("yq") {
+        return (Color::Rgb(0, 150, 136), Color::White); // JSON/YAML Teal
+    } else if title_lower.starts_with("sqlite3")
+        || title_lower.starts_with("mysql")
+        || title_lower.starts_with("redis-cli")
+        || title_lower.starts_with("psql")
+    {
+        return (Color::Rgb(40, 167, 69), Color::White); // Database Green
+    } else if title_lower.starts_with("gh") || title_lower.starts_with("hub") {
+        return (Color::Rgb(29, 185, 84), Color::White); // GitHub Green
+    } else if title_lower.starts_with("opencode")
+        || title_lower.contains("opencode")
+        || title_lower.starts_with("oc |")
+    {
+        return (Color::Rgb(88, 101, 242), Color::White); // OpenCode Blue
+    } else if title_lower.contains("watch") || title_lower.contains("tail") {
+        return (Color::Rgb(156, 39, 176), Color::White); // Watch Purple
+    } else if title_lower.starts_with("wget") || title_lower.starts_with("curl") {
+        return (Color::Rgb(52, 152, 219), Color::White); // Network Blue
+    } else if title_lower.starts_with("make") || title_lower.starts_with("cmake") {
+        return (Color::Rgb(230, 126, 34), Color::White); // Build Orange
+    } else if title_lower.starts_with("gdb") || title_lower.starts_with("lldb") {
+        return (Color::Rgb(231, 76, 60), Color::White); // Debugger Red
+    } else if title_lower.starts_with("hugo") || title_lower.starts_with("jekyll") {
+        return (Color::Rgb(155, 89, 182), Color::White); // SSG Purple
+    } else if title_lower.starts_with("pip") || title_lower.starts_with("poetry") {
+        return (Color::Rgb(53, 114, 165), Color::White); // Python Package Blue
+    } else if title_lower.starts_with("deno") || title_lower.starts_with("bun") {
+        return (Color::Rgb(46, 125, 50), Color::White); // JS Runtime Green
+    } else if title_lower.starts_with("zig") || title_lower.starts_with("nim") {
+        return (Color::Rgb(222, 76, 65), Color::White); // Compiled Lang Orange
+    }
+
+    // Default fallback for shells and other terminals
+    (Color::Rgb(103, 117, 140), Color::White) // Kitty Gray
 }
 
 fn get_tab_icon(title: &str) -> String {
