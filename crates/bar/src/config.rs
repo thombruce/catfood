@@ -19,6 +19,8 @@ pub struct ComponentOptions {
     pub sparkline_update_freq: Option<u64>,
     #[serde(default)]
     pub sparkline_logarithmic: Option<bool>,
+    #[serde(default)]
+    pub socket_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -164,6 +166,13 @@ impl ComponentConfig {
         match self {
             ComponentConfig::String(_) => None,
             ComponentConfig::Object(options) => options.sparkline_logarithmic,
+        }
+    }
+
+    pub fn socket_path(&self) -> Option<String> {
+        match self {
+            ComponentConfig::String(_) => None,
+            ComponentConfig::Object(options) => options.socket_path.clone(),
         }
     }
 }

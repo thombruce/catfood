@@ -7,6 +7,12 @@ This configuration file allows you to customize which components appear in each 
 
 ## Available Components
 - `workspaces` - Hyprland workspaces
+- `windows` - Application windows with icons
+- `kitty_tabs` - Kitty terminal tabs with program icons (requires `--single-instance` flag)
+  - Active tab: Shows full tab title (up to 20 chars)
+  - Inactive tabs: Shows program icons only for compact display
+  - Supports nvim, vim, htop, btop, git, ssh, cargo, and more
+  - Supports custom socket path configuration for non-standard Kitty installations
 - `time` - Current date and time
 - `weather` - Weather information
 - `temperature` - CPU temperature
@@ -20,6 +26,13 @@ This configuration file allows you to customize which components appear in each 
 - `space` - Single space character (" ") for fine-tuned spacing
 
 **Sparkline Support**: The `cpu`, `ram`, and `wifi` components support sparkline mode to visualize usage patterns over time. See the configuration examples below for details.
+
+**KittyTabs Component Requirements**: The `kitty_tabs` component requires Kitty terminal instances to be started with the `--single-instance` flag for proper detection. This allows the component to identify and communicate with individual Kitty processes via their UNIX sockets.
+
+```sh
+# Launch Kitty with single instance for kitty_tabs support
+kitty --single-instance
+```
 
 ## Configuration Structure
 
@@ -118,6 +131,24 @@ For any sparkline-enabled component:
 }
 ```
 
+### Terminal Workflow Focus
+```json
+{
+  "bars": {
+    "left": ["workspaces", "separator", "kitty_tabs"],
+    "middle": ["time"],
+    "right": ["wifi", "separator", "battery"]
+  }
+}
+```
+
+### Compact Terminal Display
+The `kitty_tabs` component uses a compact display approach:
+- **Active tab**: Shows full title with highlight (20 chars max)
+- **Inactive tabs**: Show only program icons (12 chars max for titles when not showing icons)
+
+This keeps the bar concise while still showing what's important at a glance.
+
 ### WiFi with Sparkline
 ```json
 {
@@ -135,6 +166,32 @@ For any sparkline-enabled component:
       "separator",
       "battery"
     ]
+  }
+}
+```
+
+### Kitty Tabs with Custom Socket Path
+If your Kitty installation uses a non-standard socket path, you can configure it:
+```json
+{
+  "bars": {
+    "left": ["workspaces", "separator", "kitty_tabs"],
+    "middle": ["time"],
+    "right": ["wifi", "separator", "battery"]
+  }
+}
+```
+
+Or with custom socket path:
+```json
+{
+  "bars": {
+    "left": ["workspaces", "separator", {
+      "name": "kitty_tabs",
+      "socket_path": "/tmp/custom-kitty-socket"
+    }],
+    "middle": ["time"],
+    "right": ["wifi", "separator", "battery"]
   }
 }
 ```

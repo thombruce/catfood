@@ -1,6 +1,6 @@
 use crate::components::{
-    Battery, Brightness, Cpu, ErrorIcon, Ram, Separator, Space, Temperature, Time, Volume, Weather,
-    Wifi, Windows, Workspaces,
+    Battery, Brightness, Cpu, ErrorIcon, KittyTabs, Ram, Separator, Space, Temperature, Time,
+    Volume, Weather, Wifi, Windows, Workspaces,
 };
 use crate::config::{ComponentConfig, Config};
 use crate::lua_component::{LuaComponent, LuaComponentRegistry};
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 pub enum Component {
     Workspaces(Workspaces),
     Windows(Windows),
+    KittyTabs(KittyTabs),
     Time(Time),
     Weather(Weather),
     Temperature(Temperature),
@@ -36,6 +37,10 @@ impl Component {
         match component_type {
             "workspaces" => Ok(Component::Workspaces(Workspaces::new())),
             "windows" => Ok(Component::Windows(Windows::new())),
+            "kitty_tabs" => {
+                let socket_path = component_config.socket_path();
+                Ok(Component::KittyTabs(KittyTabs::with_config(socket_path)))
+            }
             "time" => Ok(Component::Time(Time::with_config(
                 config.day_start,
                 config.night_start,
@@ -111,6 +116,10 @@ impl Component {
                 component.update();
                 Ok(())
             }
+            Component::KittyTabs(component) => {
+                component.update();
+                Ok(())
+            }
             Component::Time(component) => {
                 component.update();
                 Ok(())
@@ -170,6 +179,7 @@ impl Component {
         match self {
             Component::Workspaces(component) => component.render_as_spans(colorize),
             Component::Windows(component) => component.render_as_spans(colorize),
+            Component::KittyTabs(component) => component.render_as_spans(colorize),
             Component::Time(component) => component.render_as_spans(colorize),
             Component::Weather(component) => component.render_as_spans(colorize),
             Component::Temperature(component) => component.render_as_spans(colorize),

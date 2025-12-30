@@ -110,6 +110,7 @@ pub fn spawn_in_panel() {
     // This avoids shell injection risks from special characters in paths
     match Command::new("kitten")
         .arg("panel")
+        .arg("--single-instance")
         .arg(&bar_exe)
         .arg("--no-kitten") // Required to prevent spawning additional panels
         .spawn()
