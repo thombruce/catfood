@@ -60,8 +60,10 @@ impl KittyTabs {
             .iter()
             .map(|tab| {
                 if tab.is_active {
-                    // Active tab: show full title (more space)
-                    let content = format!(" {} ", truncate_title(&tab.title, true));
+                    // Active tab: show icon + full title
+                    let icon = get_tab_icon(&tab.title);
+                    let title = truncate_title(&tab.title, true);
+                    let content = format!(" {} {} ", icon, title);
                     if colorize {
                         Span::raw(content)
                             .bg(Color::Rgb(103, 117, 140)) // Kitty gray background
@@ -85,7 +87,7 @@ impl KittyTabs {
 
 fn truncate_title(title: &str, is_active: bool) -> String {
     // NOTE: This might be redundant given that we always get_tab_icon for non-active tabs below.
-    let max_len = if is_active { 20 } else { 12 }; // More space for active tab
+    let max_len = if is_active { 16 } else { 12 }; // Account for icon in active tabs
     if title.len() > max_len {
         format!("{}...", &title[..max_len - 3])
     } else {
@@ -385,6 +387,11 @@ mod tests {
         };
         let spans = kitty_tabs.render_as_spans(true);
         assert_eq!(spans.len(), 2);
+
+        // Check that active tab includes icon + title
+        let active_content = spans[1].content.clone();
+        assert!(active_content.contains("󰆍")); // Default shell icon
+        assert!(active_content.contains("Active Tab"));
     }
 
     #[test]
@@ -404,11 +411,28 @@ mod tests {
         assert_eq!(get_tab_icon("nvim config"), "");
         assert_eq!(get_tab_icon("vim /etc/fstab"), "");
         assert_eq!(get_tab_icon("htop"), "󰔚");
-        assert_eq!(get_tab_icon("opencode help"), "🤖");
+        assert_eq!(get_tab_icon("opencode help"), "󰚩");
         assert_eq!(get_tab_icon("lazygit"), "󰊢");
         assert_eq!(get_tab_icon("bat README.md"), "󰈚");
-        assert_eq!(get_tab_icon("k9s"), "☸️");
+        assert_eq!(get_tab_icon("k9s"), "󱃾");
         assert_eq!(get_tab_icon("fzf"), "󰍉");
         assert_eq!(get_tab_icon("random command"), "󰆍"); // default shell icon
+    }
+
+    #[test]
+    fn test_active_tab_with_icon() {
+        let kitty_tabs = KittyTabs {
+            tabs: vec![TabInfo {
+                title: "opencode help".to_string(),
+                is_active: true,
+            }],
+            kitty_pid: Some(12345),
+        };
+        let spans = kitty_tabs.render_as_spans(true);
+        assert_eq!(spans.len(), 1);
+
+        let content = spans[0].content.clone();
+        assert!(content.contains("󰚩")); // OpenCode icon
+        assert!(content.contains("opencode"));
     }
 }
