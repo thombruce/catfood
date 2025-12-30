@@ -8,7 +8,10 @@ This configuration file allows you to customize which components appear in each 
 ## Available Components
 - `workspaces` - Hyprland workspaces
 - `windows` - Application windows with icons
-- `kitty_tabs` - Kitty terminal tabs (requires `--single-instance` flag)
+- `kitty_tabs` - Kitty terminal tabs with program icons (requires `--single-instance` flag)
+  - Active tab: Shows full tab title (up to 20 chars)
+  - Inactive tabs: Shows program icons only for compact display
+  - Supports nvim, vim, htop, btop, git, ssh, cargo, and more
 - `time` - Current date and time
 - `weather` - Weather information
 - `temperature` - CPU temperature
@@ -137,6 +140,13 @@ For any sparkline-enabled component:
   }
 }
 ```
+
+### Compact Terminal Display
+The `kitty_tabs` component uses a compact display approach:
+- **Active tab**: Shows full title with highlight (20 chars max)
+- **Inactive tabs**: Show only program icons (12 chars max for titles when not showing icons)
+
+This keeps the bar concise while still showing what's important at a glance.
 
 ### WiFi with Sparkline
 ```json
