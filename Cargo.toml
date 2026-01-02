@@ -2,7 +2,6 @@
 members = [
     "crates/bar",
     "crates/catfood",
-    "docs",
 ]
 resolver = "2"
 
