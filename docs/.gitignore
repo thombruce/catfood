@@ -5,6 +5,7 @@
 # Sherwood
 /dist/
 .sherwood/
+!.sherwood/release/generate
 
 # OS
 .DS_Store
