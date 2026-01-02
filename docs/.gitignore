@@ -1,0 +1,17 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Sherwood
+/dist/
+.sherwood/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

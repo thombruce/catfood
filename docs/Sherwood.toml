@@ -1,0 +1,6 @@
+[site]
+title = "catfood"
+theme = "default"
+
+[templates]
+page_template = "default.stpl"
