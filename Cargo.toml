@@ -5,23 +5,23 @@ members = [
 ]
 resolver = "2"
 
+[workspace.metadata.release]
+publish = false
+shared-version = true
+tag-name = "v{{version}}"
+verify = true
+
 [workspace.package]
 version = "0.3.0"
 authors = ["Thom Bruce <thom@thombruce.com>"]
-license = "MIT"
-edition = "2024"
-repository = "https://github.com/thombruce/catfood"
-homepage = "https://github.com/thombruce/catfood"
 description = "A modular utility suite for system management, built with Rust and Ratatui"
-
-[workspace.metadata.release]
-shared-version = true
-tag-name = "v{{version}}"
-publish = false
-verify = true
+homepage = "https://github.com/thombruce/catfood"
+license = "MIT"
+repository = "https://github.com/thombruce/catfood"
+edition = "2024"
 
 [profile.release]
-codegen-units = 1
-lto = true
 opt-level = "s"
+lto = true
+codegen-units = 1
 strip = true

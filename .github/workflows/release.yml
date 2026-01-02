@@ -148,7 +148,7 @@ jobs:
       - name: Publish workspace to crates.io
         run: |
           echo "📦 Publishing workspace to crates.io..."
-          cargo publish --workspace
+          cargo publish --workspace --exclude docs
           echo "✅ Workspace published successfully!"
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
