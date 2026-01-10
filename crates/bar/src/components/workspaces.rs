@@ -2,7 +2,7 @@ use ratatui::{prelude::Stylize, style::Color, text::Span};
 use serde::Deserialize;
 use std::process::Command;
 
-use crate::logging;
+use crate::{ClickArea, ClickTarget, logging};
 
 #[derive(Deserialize, Debug)]
 struct Workspace {
@@ -75,6 +75,76 @@ impl Workspaces {
                 }
             })
             .collect::<Vec<Span>>()
+    }
+
+    pub fn render_as_spans_with_bounds(
+        &self,
+        colorize: bool,
+        x_offset: u16,
+        y: u16,
+    ) -> (Vec<Span<'_>>, Vec<ClickArea>) {
+        let rainbow_colors = [
+            Color::Red,      // 1
+            Color::Yellow,   // 2
+            Color::Green,    // 3
+            Color::Cyan,     // 4
+            Color::Blue,     // 5
+            Color::Magenta,  // 6
+            Color::LightRed, // 7
+        ];
+
+        let mut spans = Vec::new();
+        let mut click_areas = Vec::new();
+        let mut current_x = x_offset;
+
+        for workspace in &self.workspaces {
+            let workspace_text = format!(" {} ", workspace);
+            let workspace_width = workspace_text.len() as u16;
+
+            let span = if workspace == &self.active_workspace {
+                if colorize {
+                    if let Ok(workspace_num) = workspace.parse::<usize>() {
+                        let color_index = (workspace_num - 1) % rainbow_colors.len();
+                        let bg_color = rainbow_colors[color_index];
+                        Span::raw(workspace_text.clone())
+                            .bg(bg_color)
+                            .fg(Color::Black)
+                    } else {
+                        Span::raw(workspace_text.clone())
+                            .bg(Color::White)
+                            .fg(Color::Black)
+                    }
+                } else {
+                    Span::raw(workspace_text.clone())
+                        .bg(Color::White)
+                        .fg(Color::Black)
+                }
+            } else if colorize {
+                if let Ok(workspace_num) = workspace.parse::<usize>() {
+                    let color_index = (workspace_num - 1) % rainbow_colors.len();
+                    let color = rainbow_colors[color_index];
+                    Span::raw(workspace_text.clone()).fg(color)
+                } else {
+                    Span::raw(workspace_text.clone())
+                }
+            } else {
+                Span::raw(workspace_text.clone()).fg(Color::White)
+            };
+
+            // Create click area for this workspace
+            click_areas.push(ClickArea {
+                x: current_x,
+                y,
+                width: workspace_width,
+                height: 1,
+                target: ClickTarget::Workspace(workspace.clone()),
+            });
+
+            spans.push(span);
+            current_x += workspace_width;
+        }
+
+        (spans, click_areas)
     }
 }
 
