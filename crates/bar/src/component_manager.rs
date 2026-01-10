@@ -1,3 +1,4 @@
+use crate::ClickArea;
 use crate::components::{
     Battery, Brightness, Cpu, ErrorIcon, KittyTabs, Ram, Separator, Space, Temperature, Time,
     Volume, Weather, Wifi, Windows, Workspaces,
@@ -212,6 +213,24 @@ impl Component {
                 .collect()
         } else {
             spans
+        }
+    }
+
+    pub fn render_as_spans_with_bounds_and_colorize(
+        &self,
+        colorize: bool,
+        x_offset: u16,
+        y: u16,
+    ) -> (Vec<Span<'_>>, Vec<ClickArea>) {
+        match self {
+            Component::Workspaces(component) => {
+                component.render_as_spans_with_bounds(colorize, x_offset, y)
+            }
+            Component::Windows(component) => {
+                component.render_as_spans_with_bounds(colorize, x_offset, y)
+            }
+            // For other components, just return spans and empty click areas
+            _ => (self.render_as_spans_with_colorize(colorize), Vec::new()),
         }
     }
 }

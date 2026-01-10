@@ -2,7 +2,7 @@ use ratatui::{prelude::Stylize, style::Color, text::Span};
 use serde::Deserialize;
 use std::process::Command;
 
-use crate::logging;
+use crate::{ClickArea, ClickTarget, logging};
 
 #[derive(Deserialize, Debug)]
 struct Window {
@@ -76,6 +76,55 @@ impl Windows {
                 }
             })
             .collect::<Vec<Span>>()
+    }
+
+    pub fn render_as_spans_with_bounds(
+        &self,
+        colorize: bool,
+        x_offset: u16,
+        y: u16,
+    ) -> (Vec<Span<'_>>, Vec<ClickArea>) {
+        let mut spans = Vec::new();
+        let mut click_areas = Vec::new();
+        let mut current_x = x_offset;
+
+        for window in &self.windows {
+            let window_text = format!(" {} ", window.icon);
+            let window_width = window_text.len() as u16;
+
+            let span = if window.address == self.active_window {
+                if colorize {
+                    // Focused window: brand color background with appropriate text color
+                    let (bg_color, fg_color) = get_brand_color(&window.class, &window.title);
+                    Span::raw(window_text.clone()).bg(bg_color).fg(fg_color)
+                } else {
+                    // Non-colorized mode: black text on white background for active window
+                    Span::raw(window_text.clone())
+                        .bg(Color::White)
+                        .fg(Color::Black)
+                }
+            } else if colorize {
+                // Unfocused window: white text on default background
+                Span::raw(window_text.clone()).fg(Color::White)
+            } else {
+                // Non-colorized mode: white text for non-active windows
+                Span::raw(window_text.clone()).fg(Color::White)
+            };
+
+            // Create click area for this window
+            click_areas.push(ClickArea {
+                x: current_x,
+                y,
+                width: window_width,
+                height: 1,
+                target: ClickTarget::Window(format!("address:{}", window.address)),
+            });
+
+            spans.push(span);
+            current_x += window_width;
+        }
+
+        (spans, click_areas)
     }
 }
 

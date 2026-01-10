@@ -1,4 +1,6 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{
+    self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind,
+};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Direction, Layout},
@@ -21,6 +23,117 @@ pub mod time_utils;
 
 pub use component_manager::ComponentManager;
 pub use components::{LeftBar, MiddleBar, RightBar};
+
+#[derive(Debug, Clone)]
+pub enum ClickTarget {
+    Workspace(String),
+    Window(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct ClickArea {
+    pub x: u16,
+    pub y: u16,
+    pub width: u16,
+    pub height: u16,
+    pub target: ClickTarget,
+}
+
+impl ClickArea {
+    pub fn contains(&self, x: u16, y: u16) -> bool {
+        x >= self.x && x < self.x + self.width && y >= self.y && y < self.y + self.height
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_click_area_contains() {
+        let click_area = ClickArea {
+            x: 10,
+            y: 5,
+            width: 3,
+            height: 1,
+            target: ClickTarget::Workspace("1".to_string()),
+        };
+
+        // Test points inside the click area
+        assert!(click_area.contains(10, 5)); // Left edge
+        assert!(click_area.contains(11, 5)); // Middle
+        assert!(click_area.contains(12, 5)); // Right edge (x < 10 + 3, so 12 is included)
+
+        // Test points outside the click area
+        assert!(!click_area.contains(9, 5)); // Left of area
+        assert!(!click_area.contains(13, 5)); // Right of area
+        assert!(!click_area.contains(10, 4)); // Above area
+        assert!(!click_area.contains(10, 6)); // Below area
+    }
+
+    #[test]
+    fn test_workspace_click_target() {
+        let workspace_target = ClickTarget::Workspace("2".to_string());
+        match workspace_target {
+            ClickTarget::Workspace(id) => assert_eq!(id, "2"),
+            ClickTarget::Window(_) => panic!("Expected workspace target"),
+        }
+    }
+
+    #[test]
+    fn test_window_click_target() {
+        let window_target = ClickTarget::Window("0x12345678".to_string());
+        match window_target {
+            ClickTarget::Workspace(_) => panic!("Expected window target"),
+            ClickTarget::Window(address) => assert_eq!(address, "0x12345678"),
+        }
+    }
+
+    #[test]
+    fn test_multiple_click_areas() {
+        let areas = vec![
+            ClickArea {
+                x: 0,
+                y: 0,
+                width: 3,
+                height: 1,
+                target: ClickTarget::Workspace("1".to_string()),
+            },
+            ClickArea {
+                x: 3,
+                y: 0,
+                width: 3,
+                height: 1,
+                target: ClickTarget::Workspace("2".to_string()),
+            },
+        ];
+
+        // Test clicking first workspace
+        let clicked_area = areas.iter().find(|area| area.contains(1, 0));
+        assert!(clicked_area.is_some());
+        match &clicked_area.unwrap().target {
+            ClickTarget::Workspace(id) => assert_eq!(id, "1"),
+            _ => panic!("Expected workspace target"),
+        }
+
+        // Test clicking second workspace
+        let clicked_area = areas.iter().find(|area| area.contains(4, 0));
+        assert!(clicked_area.is_some());
+        match &clicked_area.unwrap().target {
+            ClickTarget::Workspace(id) => assert_eq!(id, "2"),
+            _ => panic!("Expected workspace target"),
+        }
+
+        // Test clicking between workspaces (no match)
+        let clicked_area = areas.iter().find(|area| area.contains(3, 0));
+        // This should find the second area since x=3 is included in its range (3 <= x < 6)
+        assert!(clicked_area.is_some());
+        match &clicked_area.unwrap().target {
+            ClickTarget::Workspace(id) => assert_eq!(id, "2"),
+            _ => panic!("Expected workspace target"),
+        }
+    }
+}
 
 /// Check if bar is already running by checking PID file
 pub fn is_bar_running() -> color_eyre::Result<bool> {
@@ -164,9 +277,13 @@ pub fn run_bar() -> color_eyre::Result<()> {
     let rt = Runtime::new()?;
 
     let result = rt.block_on(async {
+        // Enable mouse events explicitly before ratatui init
+        crossterm::execute!(std::io::stdout(), crossterm::event::EnableMouseCapture)?;
         let terminal = ratatui::init();
         let app_result = App::new()?.run_async(terminal).await;
         ratatui::restore();
+        // Disable mouse capture when done
+        crossterm::execute!(std::io::stdout(), crossterm::event::DisableMouseCapture)?;
         app_result
     });
 
@@ -186,6 +303,8 @@ pub struct App {
     middle_bar: MiddleBar,
     right_bar: RightBar,
     reload_rx: mpsc::Receiver<()>,
+    /// Click areas for mouse interaction
+    click_areas: Vec<ClickArea>,
 }
 
 impl App {
@@ -204,6 +323,7 @@ impl App {
             middle_bar: MiddleBar::new()?,
             right_bar: RightBar::new()?,
             reload_rx,
+            click_areas: Vec::new(),
         })
     }
 
@@ -310,6 +430,9 @@ impl App {
 
     /// Renders the user interface.
     fn render(&mut self, frame: &mut Frame) {
+        // Clear click areas before rendering
+        self.click_areas.clear();
+
         let layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![
@@ -319,12 +442,20 @@ impl App {
             ])
             .split(frame.area());
 
-        self.left_bar
+        let mut left_areas = self
+            .left_bar
             .render(frame, layout[0], &self.component_manager);
-        self.middle_bar
+        let mut middle_areas = self
+            .middle_bar
             .render(frame, layout[1], &self.component_manager);
-        self.right_bar
+        let mut right_areas = self
+            .right_bar
             .render(frame, layout[2], &self.component_manager);
+
+        // Collect all click areas
+        self.click_areas.append(&mut left_areas);
+        self.click_areas.append(&mut middle_areas);
+        self.click_areas.append(&mut right_areas);
     }
 
     /// Reads the crossterm events and updates the state of [`App`].
@@ -332,7 +463,7 @@ impl App {
         if event::poll(Duration::from_millis(333))? {
             match event::read()? {
                 Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
-                Event::Mouse(_) => {}
+                Event::Mouse(mouse_event) => self.on_mouse_event(mouse_event)?,
                 Event::Resize(_, _) => {}
                 _ => {}
             }
@@ -347,6 +478,53 @@ impl App {
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             _ => {}
         }
+    }
+
+    /// Handles mouse events and updates the state of [`App`].
+    fn on_mouse_event(&mut self, mouse_event: MouseEvent) -> color_eyre::Result<()> {
+        if let MouseEventKind::Down(crossterm::event::MouseButton::Left) = mouse_event.kind {
+            // Find clicked area
+            for click_area in &self.click_areas {
+                if click_area.contains(mouse_event.column, mouse_event.row) {
+                    self.handle_click(&click_area.target)?;
+                    break;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Handle click on a specific target
+    fn handle_click(&self, target: &ClickTarget) -> color_eyre::Result<()> {
+        match target {
+            ClickTarget::Workspace(workspace_id) => {
+                let output = Command::new("hyprctl")
+                    .args(["dispatch", "workspace", workspace_id])
+                    .output()?;
+
+                if !output.status.success() {
+                    let stderr = str::from_utf8(&output.stderr).unwrap_or("unknown error");
+                    logging::log_system_error(
+                        "Workspace Focus",
+                        &format!("Failed to focus workspace {}: {}", workspace_id, stderr),
+                    );
+                }
+            }
+            ClickTarget::Window(address) => {
+                let output = Command::new("hyprctl")
+                    .args(["dispatch", "focuswindow", address])
+                    .output()?;
+
+                if !output.status.success() {
+                    let stderr = str::from_utf8(&output.stderr).unwrap_or("unknown error");
+                    logging::log_system_error(
+                        "Window Focus",
+                        &format!("Failed to focus window {}: {}", address, stderr),
+                    );
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Set running to false to quit the application.
